@@ -1,0 +1,68 @@
+'use client'
+
+import type { GameState } from '@/hooks/useGameSocket'
+
+interface Props {
+  state: GameState
+  onStart: () => void
+  onKick: (id: string) => void
+}
+
+export default function Lobby({ state, onStart, onKick }: Props) {
+  const players = Object.values(state.players)
+  const canStart = players.filter(p => p.isConnected).length >= 3
+
+  return (
+    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
+      <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
+        <div className="text-center mb-6">
+          <p className="text-white/50 text-xs uppercase tracking-widest mb-1">Room Code</p>
+          <p className="text-4xl font-black text-white tracking-widest font-mono">{state.roomId}</p>
+          <p className="text-white/40 text-xs mt-2">सबको यह code भेजें या link share करें</p>
+        </div>
+
+        <div className="bg-white/5 rounded-2xl border border-white/10 flex-1 mb-6 overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/10">
+            <p className="text-white/60 text-sm">{players.length} / 12 players</p>
+          </div>
+          <ul className="divide-y divide-white/5">
+            {players.map(p => (
+              <li key={p.id} className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${p.isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className="text-white font-medium">{p.nickname}</span>
+                  {p.isHost && <span className="text-xs text-indigo-400 font-semibold">HOST</span>}
+                </div>
+                {state.isHost && !p.isHost && (
+                  <button
+                    onClick={() => onKick(p.id)}
+                    className="text-red-400/60 text-xs hover:text-red-400 transition-colors px-2 py-1"
+                  >
+                    Remove
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {state.isHost ? (
+          <div className="flex flex-col gap-3">
+            {!canStart && (
+              <p className="text-white/40 text-sm text-center">कम से कम 3 players चाहिए</p>
+            )}
+            <button
+              onClick={onStart}
+              disabled={!canStart}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+            >
+              Game शुरू करें
+            </button>
+          </div>
+        ) : (
+          <p className="text-white/40 text-sm text-center">Host के game शुरू करने का इंतज़ार करें...</p>
+        )}
+      </div>
+    </div>
+  )
+}

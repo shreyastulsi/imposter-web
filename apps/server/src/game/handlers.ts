@@ -43,6 +43,15 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
     }
   })
 
+  socket.on('vote:start', ({ roomId }) => {
+    try {
+      const room = manager.startVoting(roomId, socket.id)
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+    } catch (e: any) {
+      socket.emit('error', { code: e.message })
+    }
+  })
+
   socket.on('card:acknowledge', ({ roomId }) => {
     try {
       const card = manager.getCardData(roomId, socket.id)
