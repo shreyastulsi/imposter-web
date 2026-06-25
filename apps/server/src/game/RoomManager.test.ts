@@ -160,6 +160,23 @@ describe('getCardData', () => {
     expect('category' in card).toBe(false)
     expect('hint' in card).toBe(false)
   })
+
+  it('getCardData marks the player as hasRevealed in room state', () => {
+    const { roomId, players } = setupStartedRoom('none')
+    manager.getCardData(roomId, players[0])
+    const room = manager.getRoom(roomId)!
+    expect(room.players[players[0]].hasRevealed).toBe(true)
+    // other players are still unrevealed
+    expect(room.players[players[1]].hasRevealed).toBe(false)
+  })
+
+  it('all players revealed when every player calls getCardData', () => {
+    const { roomId, players } = setupStartedRoom('none')
+    for (const pid of players) manager.getCardData(roomId, pid)
+    const room = manager.getRoom(roomId)!
+    const allRevealed = Object.values(room.players).every(p => p.hasRevealed)
+    expect(allRevealed).toBe(true)
+  })
 })
 
 // ─── Behaviors 8+9+10: voting ────────────────────────────────────────────────

@@ -56,6 +56,10 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
     try {
       const card = manager.getCardData(roomId, socket.id)
       socket.emit('card:data', card)
+      const room = manager.getRoom(roomId)
+      if (room) {
+        io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+      }
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }
