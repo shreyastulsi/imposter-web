@@ -26,8 +26,8 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
   return (
     <div className="min-h-dvh flex flex-col items-center justify-between px-4 py-8 bg-[#0f0f23]">
       <div className="text-center">
-        <h2 className="text-white font-bold text-xl">अपना card देखें</h2>
-        <p className="text-white/40 text-sm mt-1">किसी को अपनी screen मत दिखाएं</p>
+        <h2 className="text-white font-bold text-xl">Check your card</h2>
+        <p className="text-white/40 text-sm mt-1">Don't show your screen to anyone</p>
       </div>
 
       <div className="w-full max-w-xs">
@@ -51,7 +51,7 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
               <div className="text-center">
                 <div className="text-6xl mb-4">🃏</div>
                 <p className="text-white font-bold text-lg">Tap to reveal</p>
-                <p className="text-white/50 text-sm mt-1">अकेले में देखें</p>
+                <p className="text-white/50 text-sm mt-1">Check privately</p>
               </div>
             </div>
 
@@ -72,7 +72,7 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
                   <div className="text-center">
                     <div className="text-5xl mb-4">🕵️</div>
                     <p className="text-red-400 font-black text-2xl mb-2">IMPOSTER</p>
-                    <p className="text-white/60 text-sm">तुम imposter हो!</p>
+                    <p className="text-white/60 text-sm">You are the imposter!</p>
                     {cardData.category && (
                       <div className="mt-4 bg-white/5 rounded-xl p-3">
                         <p className="text-white/40 text-xs">Category</p>
@@ -88,7 +88,7 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
                   </div>
                 ) : (
                   <div className="text-center">
-                    <p className="text-green-400/60 text-xs uppercase tracking-widest mb-3">शब्द</p>
+                    <p className="text-green-400/60 text-xs uppercase tracking-widest mb-3">Word</p>
                     <p className="text-white font-black text-4xl mb-1">{cardData.word}</p>
                     {cardData.english && (
                       <p className="text-white/50 text-lg mb-4">{cardData.english}</p>
@@ -130,7 +130,7 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
             disabled={!allRevealed}
             className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors mt-2"
           >
-            {allRevealed ? 'Voting शुरू करें' : 'सबके reveal करने का इंतज़ार...'}
+            {allRevealed ? 'Start Voting' : 'Waiting for everyone to reveal...'}
           </button>
         )}
       </div>

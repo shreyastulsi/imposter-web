@@ -28,7 +28,7 @@ export default function AwaitingGuess({ state, onGuess }: Props) {
         <div className="text-center">
           <div className="text-6xl mb-4">{guessResult.correct ? '🎉' : '❌'}</div>
           <p className="text-white font-bold text-2xl">
-            {guessResult.correct ? 'सही guess!' : 'गलत guess!'}
+            {guessResult.correct ? 'Correct guess!' : 'Wrong guess!'}
           </p>
           <p className="text-white/50 mt-2">Waiting for results...</p>
         </div>
@@ -44,12 +44,12 @@ export default function AwaitingGuess({ state, onGuess }: Props) {
             <div className="text-center mb-8">
               <div className="text-5xl mb-4">🕵️</div>
               <h2 className="text-white font-black text-2xl">Last chance!</h2>
-              <p className="text-white/50 mt-2 text-sm">अगर शब्द सही guess किया तो भी जीत सकते हो</p>
+              <p className="text-white/50 mt-2 text-sm">Guess the word correctly and you still win!</p>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input
                 className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-4 text-xl text-center outline-none focus:ring-2 focus:ring-yellow-500"
-                placeholder="शब्द क्या था?"
+                placeholder="What was the word?"
                 value={guess}
                 onChange={e => setGuess(e.target.value)}
                 disabled={submitted}
@@ -60,15 +60,15 @@ export default function AwaitingGuess({ state, onGuess }: Props) {
                 disabled={!guess.trim() || submitted}
                 className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
               >
-                {submitted ? 'Guess दे दिया...' : 'Guess करें'}
+                {submitted ? 'Guess submitted...' : 'Submit Guess'}
               </button>
             </form>
           </>
         ) : (
           <div className="text-center">
             <div className="text-5xl mb-4 animate-pulse">🕵️</div>
-            <h2 className="text-white font-bold text-xl">Imposter guess कर रहा है...</h2>
-            <p className="text-white/40 text-sm mt-2">क्या वो शब्द जानता है?</p>
+            <h2 className="text-white font-bold text-xl">Imposter is guessing...</h2>
+            <p className="text-white/40 text-sm mt-2">Do they know the word?</p>
           </div>
         )}
       </div>

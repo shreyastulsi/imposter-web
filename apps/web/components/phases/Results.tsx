@@ -25,24 +25,24 @@ export default function Results({ state, onNewRound }: Props) {
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">{civiliansWon ? '🎉' : '🕵️'}</div>
           <h2 className="text-white font-black text-2xl">
-            {civiliansWon ? 'Civilians जीते!' : 'Imposter जीता!'}
+            {civiliansWon ? 'Civilians win!' : 'Imposter wins!'}
           </h2>
           {iWasImposter && (
             <p className="text-white/50 text-sm mt-1">
-              {civiliansWon ? 'तुम पकड़े गए' : 'तुमने सबको बेवकूफ बनाया!'}
+              {civiliansWon ? 'You were caught' : 'You fooled everyone!'}
             </p>
           )}
         </div>
 
         <div className="bg-white/5 rounded-2xl border border-white/10 p-4 mb-4">
-          <p className="text-white/40 text-xs mb-2">Imposter था</p>
+          <p className="text-white/40 text-xs mb-2">The imposter was</p>
           <p className="text-white font-bold text-lg">{imposter?.nickname ?? '?'}</p>
           <div className="mt-3 border-t border-white/10 pt-3">
-            <p className="text-white/40 text-xs mb-1">शब्द था</p>
+            <p className="text-white/40 text-xs mb-1">The word was</p>
             <p className="text-white font-black text-2xl">{roundResult.word}</p>
             {voteReveal && (
               <p className="text-white/40 text-sm mt-1">
-                {civiliansWon ? 'Imposter सही guess नहीं कर पाया' : 'Imposter ने सही guess किया!'}
+                {civiliansWon ? "Imposter couldn't guess the word" : 'Imposter guessed the word correctly!'}
               </p>
             )}
           </div>
@@ -58,7 +58,7 @@ export default function Results({ state, onNewRound }: Props) {
                 <div className="flex items-center gap-3">
                   <span className="text-white/30 text-sm w-4">{i + 1}</span>
                   <span className="text-white font-medium">{p.nickname}</span>
-                  {p.id === myId && <span className="text-xs text-indigo-400">(तुम)</span>}
+                  {p.id === myId && <span className="text-xs text-indigo-400">(you)</span>}
                   {p.id === roundResult.imposterId && <span className="text-xs text-red-400">🕵️</span>}
                 </div>
                 <span className="text-white font-bold">{p.score}</span>
@@ -72,10 +72,10 @@ export default function Results({ state, onNewRound }: Props) {
             onClick={onNewRound}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
           >
-            अगला Round
+            Next Round
           </button>
         ) : (
-          <p className="text-center text-white/40 text-sm">Host के अगले round शुरू करने का इंतज़ार करें...</p>
+          <p className="text-center text-white/40 text-sm">Waiting for the host to start the next round...</p>
         )}
       </div>
     </div>

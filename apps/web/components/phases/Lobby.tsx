@@ -18,7 +18,7 @@ export default function Lobby({ state, onStart, onKick }: Props) {
         <div className="text-center mb-6">
           <p className="text-white/50 text-xs uppercase tracking-widest mb-1">Room Code</p>
           <p className="text-4xl font-black text-white tracking-widest font-mono">{state.roomId}</p>
-          <p className="text-white/40 text-xs mt-2">सबको यह code भेजें या link share करें</p>
+          <p className="text-white/40 text-xs mt-2">Share this code with your friends</p>
         </div>
 
         <div className="bg-white/5 rounded-2xl border border-white/10 flex-1 mb-6 overflow-hidden">
@@ -49,18 +49,18 @@ export default function Lobby({ state, onStart, onKick }: Props) {
         {state.isHost ? (
           <div className="flex flex-col gap-3">
             {!canStart && (
-              <p className="text-white/40 text-sm text-center">कम से कम 3 players चाहिए</p>
+              <p className="text-white/40 text-sm text-center">Need at least 3 players to start</p>
             )}
             <button
               onClick={onStart}
               disabled={!canStart}
               className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >
-              Game शुरू करें
+              Start Game
             </button>
           </div>
         ) : (
-          <p className="text-white/40 text-sm text-center">Host के game शुरू करने का इंतज़ार करें...</p>
+          <p className="text-white/40 text-sm text-center">Waiting for the host to start the game...</p>
         )}
       </div>
     </div>

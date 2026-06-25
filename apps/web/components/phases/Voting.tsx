@@ -24,7 +24,7 @@ export default function Voting({ state, onVote }: Props) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 bg-[#0f0f23]">
         <div className="w-full max-w-sm">
-          <h2 className="text-white font-bold text-xl text-center mb-6">Votes का नतीजा</h2>
+          <h2 className="text-white font-bold text-xl text-center mb-6">Vote Results</h2>
           <ul className="flex flex-col gap-3 mb-6">
             {playerList.map(p => {
               const votesForThis = Object.values(voteReveal.votes).filter(v => v === p.id).length
@@ -39,7 +39,7 @@ export default function Voting({ state, onVote }: Props) {
                   <div className="flex items-center gap-2">
                     {isImposter && <span>🕵️</span>}
                     <span className="text-white font-semibold">{p.nickname}</span>
-                    {p.id === myId && <span className="text-xs text-indigo-400">(तुम)</span>}
+                    {p.id === myId && <span className="text-xs text-indigo-400">(you)</span>}
                   </div>
                   <span className="text-white/60 text-sm">{votesForThis} vote{votesForThis !== 1 ? 's' : ''}</span>
                 </li>
@@ -47,9 +47,9 @@ export default function Voting({ state, onVote }: Props) {
             })}
           </ul>
           {voteReveal.majorityCaught ? (
-            <p className="text-center text-yellow-400 font-semibold">Imposter पकड़ा गया! अब guess करेगा...</p>
+            <p className="text-center text-yellow-400 font-semibold">Imposter caught! Now they get a last-chance guess...</p>
           ) : (
-            <p className="text-center text-red-400 font-semibold">कोई majority नहीं — Imposter जीत गया!</p>
+            <p className="text-center text-red-400 font-semibold">No majority — Imposter wins!</p>
           )}
         </div>
       </div>
@@ -60,14 +60,14 @@ export default function Voting({ state, onVote }: Props) {
     <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
       <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
         <div className="text-center mb-6">
-          <h2 className="text-white font-bold text-xl">Imposter कौन है?</h2>
-          <p className="text-white/40 text-sm mt-1">एक को vote करें</p>
+          <h2 className="text-white font-bold text-xl">Who is the imposter?</h2>
+          <p className="text-white/40 text-sm mt-1">Vote for one player</p>
         </div>
 
         {voteTick && (
           <div className="mb-4">
             <div className="flex justify-between text-sm text-white/40 mb-2">
-              <span>Votes मिले</span>
+              <span>Votes in</span>
               <span>{voteTick.count} / {voteTick.total}</span>
             </div>
             <div className="w-full bg-white/10 rounded-full h-2">
@@ -99,7 +99,7 @@ export default function Voting({ state, onVote }: Props) {
                   }`}
                 >
                   <span className="font-semibold">{p.nickname}</span>
-                  {isMe && <span className="text-xs text-white/40 ml-2">(तुम)</span>}
+                  {isMe && <span className="text-xs text-white/40 ml-2">(you)</span>}
                   {isSelected && <span className="text-xs text-yellow-400 ml-2">✓ voted</span>}
                 </button>
               </li>
@@ -108,7 +108,7 @@ export default function Voting({ state, onVote }: Props) {
         </ul>
 
         {voted && !voteTick && (
-          <p className="text-center text-white/40 text-sm mt-4">Vote दे दिया! बाकियों का इंतज़ार...</p>
+          <p className="text-center text-white/40 text-sm mt-4">Vote submitted! Waiting for others...</p>
         )}
       </div>
     </div>
