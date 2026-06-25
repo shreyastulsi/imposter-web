@@ -10,6 +10,7 @@ export type GamePhase =
 export interface WordEntry {
   id: string
   word: string
+  english: string
   category: string
   hint: string
 }
@@ -45,6 +46,7 @@ export interface Room {
 export interface CardData {
   isImposter: boolean
   word?: string
+  english?: string
   category?: string
   hint?: string
 }

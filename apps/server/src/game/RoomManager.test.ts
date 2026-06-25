@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { RoomManager } from './RoomManager'
 
 const WORD_LIST = [
-  { id: 'w1', word: 'शेर', category: 'जानवर', hint: 'जंगल का राजा' },
-  { id: 'w2', word: 'हाथी', category: 'जानवर', hint: 'सबसे बड़ा जानवर' },
-  { id: 'w3', word: 'बाघ', category: 'जानवर', hint: 'धारीदार जानवर' },
+  { id: 'w1', word: 'शेर', english: 'Lion', category: 'जानवर', hint: 'जंगल का राजा' },
+  { id: 'w2', word: 'हाथी', english: 'Elephant', category: 'जानवर', hint: 'सबसे बड़ा जानवर' },
+  { id: 'w3', word: 'बाघ', english: 'Tiger', category: 'जानवर', hint: 'धारीदार जानवर' },
 ]
 
 let manager: RoomManager
@@ -105,22 +105,24 @@ describe('getCardData', () => {
     return { roomId: room.id, imposterId: started.round!.imposterId, players: ['s1', 's2', 's3'] }
   }
 
-  it('civilian gets word with infoLevel=hint', () => {
+  it('civilian gets word, english translation, category, and hint with infoLevel=hint', () => {
     const { roomId, imposterId, players } = setupStartedRoom('hint')
     const civilian = players.find(p => p !== imposterId)!
     const card = manager.getCardData(roomId, civilian)
     expect(card.isImposter).toBe(false)
     expect(card.word).toBeDefined()
+    expect(card.english).toBeDefined()
     expect(card.category).toBeDefined()
     expect(card.hint).toBeDefined()
   })
 
-  it('civilian gets word+category but no hint with infoLevel=category', () => {
+  it('civilian gets word, english translation, and category but no hint with infoLevel=category', () => {
     const { roomId, imposterId, players } = setupStartedRoom('category')
     const civilian = players.find(p => p !== imposterId)!
     const card = manager.getCardData(roomId, civilian)
     expect(card.isImposter).toBe(false)
     expect(card.word).toBeDefined()
+    expect(card.english).toBeDefined()
     expect(card.category).toBeDefined()
     expect(card.hint).toBeUndefined()
   })

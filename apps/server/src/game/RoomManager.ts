@@ -111,7 +111,7 @@ export class RoomManager {
     room.players[playerId].hasRevealed = true
 
     if (!isImposter) {
-      const base: CardData = { isImposter: false, word: round.word.word, category: round.word.category }
+      const base: CardData = { isImposter: false, word: round.word.word, english: round.word.english, category: round.word.category }
       if (infoLevel === 'hint') base.hint = round.word.hint
       return base
     }
