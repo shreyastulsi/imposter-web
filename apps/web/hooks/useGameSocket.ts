@@ -100,10 +100,10 @@ function reducer(state: GameState, action: Action): GameState {
         players: action.players,
         hostId: action.hostId,
         isHost: state.myId ? action.players[state.myId]?.isHost ?? false : false,
-        cardData: action.phase === 'lobby' ? null : state.cardData,
-        voteTick: action.phase === 'lobby' ? null : state.voteTick,
-        voteReveal: action.phase === 'lobby' ? null : state.voteReveal,
-        roundResult: action.phase === 'lobby' ? null : state.roundResult,
+        cardData: action.phase === 'lobby' || action.phase === 'card_reveal' ? null : state.cardData,
+        voteTick: action.phase === 'lobby' || action.phase === 'card_reveal' ? null : state.voteTick,
+        voteReveal: action.phase === 'lobby' || action.phase === 'card_reveal' ? null : state.voteReveal,
+        roundResult: action.phase === 'lobby' || action.phase === 'card_reveal' ? null : state.roundResult,
       }
     case 'CARD_DATA':
       return { ...state, cardData: action.card, screen: 'card_reveal' }
