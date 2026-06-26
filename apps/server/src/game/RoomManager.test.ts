@@ -351,3 +351,108 @@ describe('kickPlayer', () => {
     expect(() => manager.kickPlayer(room.id, 's2', 's3')).toThrow('not_host')
   })
 })
+
+// ─── Behavior: startDiscussion ────────────────────────────────────────────────
+
+function setupDiscussion(manager: RoomManager) {
+  const room = manager.createRoom('s1', 'A', 'none')
+  manager.joinRoom(room.id, 's2', 'B')
+  manager.joinRoom(room.id, 's3', 'C')
+  manager.startGame(room.id, 's1')
+  // mark all revealed so host can start discussion
+  manager.getCardData(room.id, 's1')
+  manager.getCardData(room.id, 's2')
+  manager.getCardData(room.id, 's3')
+  return room.id
+}
+
+describe('startDiscussion', () => {
+  it('transitions to discussion phase', () => {
+    const roomId = setupDiscussion(manager)
+    const result = manager.startDiscussion(roomId, 's1')
+    expect(result.phase).toBe('discussion')
+  })
+
+  it('sets a random turn order with all connected players', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    expect(room.round!.turnOrder).toHaveLength(3)
+    expect(room.round!.turnOrder!.sort()).toEqual(['s1', 's2', 's3'].sort())
+  })
+
+  it('starts at index 0, round 1', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    expect(room.round!.currentTurnIndex).toBe(0)
+    expect(room.round!.discussionRound).toBe(1)
+  })
+
+  it('throws if caller is not host', () => {
+    const roomId = setupDiscussion(manager)
+    expect(() => manager.startDiscussion(roomId, 's2')).toThrow('not_host')
+  })
+
+  it('throws if not in card_reveal phase', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    expect(() => manager.startDiscussion(room.id, 's1')).toThrow('wrong_phase')
+  })
+})
+
+// ─── Behavior: advanceTurn ────────────────────────────────────────────────────
+
+describe('advanceTurn', () => {
+  it('returns the next player and stays in discussion phase', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const firstPlayer = room.round!.turnOrder![0]
+    const result = manager.advanceTurn(roomId)
+    expect(result.done).toBe(false)
+    expect(result.playerId).not.toBe(firstPlayer)
+    expect(result.turnNumber).toBe(1)
+  })
+
+  it('wraps to round 2 after all players go in round 1', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    // advance past all 3 players in round 1 (2 advances needed, 3rd triggers wrap)
+    manager.advanceTurn(roomId) // player 2
+    manager.advanceTurn(roomId) // player 3
+    const result = manager.advanceTurn(roomId) // wraps to round 2, player 1
+    expect(result.done).toBe(false)
+    expect(result.turnNumber).toBe(2)
+    const room = manager.getRoom(roomId)!
+    expect(room.round!.discussionRound).toBe(2)
+    expect(room.round!.currentTurnIndex).toBe(0)
+  })
+
+  it('returns done after all players finish round 2 and transitions to voting', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    // 5 advances exhaust round 1 (2) + round 2 (3 triggers done on last)
+    manager.advanceTurn(roomId)
+    manager.advanceTurn(roomId)
+    manager.advanceTurn(roomId) // wraps to round 2
+    manager.advanceTurn(roomId)
+    manager.advanceTurn(roomId)
+    const result = manager.advanceTurn(roomId) // last player in round 2
+    expect(result.done).toBe(true)
+    const room = manager.getRoom(roomId)!
+    expect(room.phase).toBe('voting')
+  })
+
+  it('skips disconnected players', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const secondPlayer = room.round!.turnOrder![1]
+    manager.disconnectPlayer(roomId, secondPlayer)
+    const result = manager.advanceTurn(roomId)
+    // should skip the disconnected player
+    expect(result.playerId).not.toBe(secondPlayer)
+  })
+})

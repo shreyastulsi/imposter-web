@@ -7,10 +7,10 @@ import { useLang } from '@/contexts/LanguageContext'
 interface Props {
   state: GameState
   onAcknowledge: () => void
-  onStartVoting: () => void
+  onStartDiscussion: () => void
 }
 
-export default function CardReveal({ state, onAcknowledge, onStartVoting }: Props) {
+export default function CardReveal({ state, onAcknowledge, onStartDiscussion }: Props) {
   const [flipped, setFlipped] = useState(false)
   const { cardData, players, isHost, myId } = state
   const { lang, setLang } = useLang()
@@ -149,11 +149,11 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
         </div>
         {isHost && (
           <button
-            onClick={onStartVoting}
+            onClick={onStartDiscussion}
             disabled={!allRevealed}
             className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors mt-2"
           >
-            {allRevealed ? 'Start Voting' : 'Waiting for everyone to reveal...'}
+            {allRevealed ? 'Start Discussion' : 'Waiting for everyone to reveal...'}
           </button>
         )}
       </div>

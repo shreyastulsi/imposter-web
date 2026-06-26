@@ -95,6 +95,55 @@ export class RoomManager {
     return this.clone(room)
   }
 
+  startDiscussion(roomId: string, callerId: string): Room {
+    const room = this.getWritableRoom(roomId)
+    if (room.hostId !== callerId) throw new Error('not_host')
+    if (room.phase !== 'card_reveal') throw new Error('wrong_phase')
+    const round = this.requireRound(room)
+    const connected = this.connectedPlayers(room)
+    const shuffled = [...connected].sort(() => Math.random() - 0.5).map(p => p.id)
+    round.turnOrder = shuffled
+    round.currentTurnIndex = 0
+    round.discussionRound = 1
+    room.phase = 'discussion'
+    return this.clone(room)
+  }
+
+  advanceTurn(roomId: string): { done: true } | { done: false; playerId: string; turnNumber: 1 | 2 } {
+    const room = this.getWritableRoom(roomId)
+    const round = this.requireRound(room)
+    const order = round.turnOrder!
+    let index = round.currentTurnIndex! + 1
+    let discussionRound = round.discussionRound!
+
+    // If we've exhausted this round, move to next round or finish
+    if (index >= order.length) {
+      if (discussionRound === 2) {
+        room.phase = 'voting'
+        return { done: true }
+      }
+      discussionRound = 2
+      index = 0
+    }
+
+    // Skip disconnected players
+    while (index < order.length && !room.players[order[index]]?.isConnected) {
+      index++
+      if (index >= order.length) {
+        if (discussionRound === 2) {
+          room.phase = 'voting'
+          return { done: true }
+        }
+        discussionRound = 2
+        index = 0
+      }
+    }
+
+    round.currentTurnIndex = index
+    round.discussionRound = discussionRound
+    return { done: false, playerId: order[index], turnNumber: discussionRound }
+  }
+
   startVoting(roomId: string, callerId: string): Room {
     const room = this.getWritableRoom(roomId)
     if (room.hostId !== callerId) throw new Error('not_host')

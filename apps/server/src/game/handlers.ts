@@ -1,10 +1,42 @@
 import type { Server, Socket } from 'socket.io'
 import type { RoomManager } from './RoomManager'
 
-export function registerHandlers(io: Server, socket: Socket, manager: RoomManager) {
+const TURN_DURATION_MS = 30_000
+const turnTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+function clearTurnTimer(roomId: string) {
+  const t = turnTimers.get(roomId)
+  if (t) { clearTimeout(t); turnTimers.delete(roomId) }
+}
+
+function emitTurn(io: Server, mgr: RoomManager, roomId: string, playerId: string, turnNumber: 1 | 2) {
+  const timeoutAt = Date.now() + TURN_DURATION_MS
+  io.to(roomId).emit('discussion:turn', { playerId, turnNumber, timeoutAt })
+  clearTurnTimer(roomId)
+  turnTimers.set(roomId, setTimeout(() => {
+    advanceTurnAndBroadcast(io, mgr, roomId)
+  }, TURN_DURATION_MS))
+}
+
+function advanceTurnAndBroadcast(io: Server, mgr: RoomManager, roomId: string) {
+  clearTurnTimer(roomId)
+  try {
+    const result = mgr.advanceTurn(roomId)
+    if (result.done) {
+      const room = mgr.getRoom(roomId)
+      if (room) io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+    } else {
+      emitTurn(io, mgr, roomId, result.playerId, result.turnNumber)
+    }
+  } catch {
+    // room may be gone
+  }
+}
+
+export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
   socket.on('room:create', ({ nickname, infoLevel }) => {
     try {
-      const room = manager.createRoom(socket.id, nickname, infoLevel)
+      const room = mgr.createRoom(socket.id, nickname, infoLevel)
       socket.join(room.id)
       socket.emit('room:joined', { roomId: room.id, player: room.players[socket.id], room })
     } catch (e: any) {
@@ -14,7 +46,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('room:join', ({ roomId, nickname }) => {
     try {
-      const room = manager.joinRoom(roomId, socket.id, nickname)
+      const room = mgr.joinRoom(roomId, socket.id, nickname)
       socket.join(roomId)
       socket.emit('room:joined', { roomId, player: room.players[socket.id], room })
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
@@ -25,7 +57,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('room:reconnect', ({ roomId, playerId }) => {
     try {
-      const room = manager.reconnectPlayer(roomId, playerId, socket.id)
+      const room = mgr.reconnectPlayer(roomId, playerId, socket.id)
       socket.join(roomId)
       socket.emit('room:joined', { roomId, player: room.players[socket.id], room })
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
@@ -36,8 +68,32 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('game:start', ({ roomId }) => {
     try {
-      const room = manager.startGame(roomId, socket.id)
+      const room = mgr.startGame(roomId, socket.id)
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+    } catch (e: any) {
+      socket.emit('error', { code: e.message })
+    }
+  })
+
+  socket.on('discussion:start', ({ roomId }) => {
+    try {
+      const room = mgr.startDiscussion(roomId, socket.id)
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+      const round = room.round!
+      emitTurn(io, mgr, roomId, round.turnOrder![0], 1)
+    } catch (e: any) {
+      socket.emit('error', { code: e.message })
+    }
+  })
+
+  socket.on('discussion:spoke', ({ roomId }) => {
+    try {
+      const room = mgr.getRoom(roomId)
+      if (!room) return
+      const round = room.round!
+      // Only the active player can advance
+      if (round.turnOrder![round.currentTurnIndex!] !== socket.id) return
+      advanceTurnAndBroadcast(io, mgr, roomId)
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }
@@ -45,7 +101,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('vote:start', ({ roomId }) => {
     try {
-      const room = manager.startVoting(roomId, socket.id)
+      const room = mgr.startVoting(roomId, socket.id)
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
@@ -54,9 +110,9 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('card:acknowledge', ({ roomId }) => {
     try {
-      const card = manager.getCardData(roomId, socket.id)
+      const card = mgr.getCardData(roomId, socket.id)
       socket.emit('card:data', card)
-      const room = manager.getRoom(roomId)
+      const room = mgr.getRoom(roomId)
       if (room) {
         io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
       }
@@ -67,14 +123,14 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('vote:submit', ({ roomId, targetPlayerId }) => {
     try {
-      const tick = manager.submitVote(roomId, socket.id, targetPlayerId)
+      const tick = mgr.submitVote(roomId, socket.id, targetPlayerId)
       io.to(roomId).emit('vote:tick', tick)
 
       if (tick.count === tick.total) {
-        const result = manager.tallyVotes(roomId)
+        const result = mgr.tallyVotes(roomId)
         io.to(roomId).emit('vote:reveal', result)
         if (!result.majorityCaught) {
-          const room = manager.finalizeResult(roomId, 'imposter_wins')
+          const room = mgr.finalizeResult(roomId, 'imposter_wins')
           io.to(roomId).emit('phase:results', {
             result: 'imposter_wins',
             scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
@@ -83,7 +139,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
             englishWord: room.round?.word.english,
           })
         } else {
-          const room = manager.getRoom(roomId)
+          const room = mgr.getRoom(roomId)
           if (room) io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
         }
       }
@@ -94,8 +150,8 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('guess:judge', ({ roomId, correct }) => {
     try {
-      const judgeResult = manager.hostJudgeGuess(roomId, socket.id, correct)
-      const room = manager.finalizeResult(roomId, judgeResult.result)
+      const judgeResult = mgr.hostJudgeGuess(roomId, socket.id, correct)
+      const room = mgr.finalizeResult(roomId, judgeResult.result)
       io.to(roomId).emit('phase:results', {
         result: judgeResult.result,
         scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
@@ -110,7 +166,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('round:new', ({ roomId }) => {
     try {
-      const room = manager.startNewRound(roomId, socket.id)
+      const room = mgr.startNewRound(roomId, socket.id)
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
@@ -119,7 +175,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
 
   socket.on('player:kick', ({ roomId, playerId }) => {
     try {
-      const room = manager.kickPlayer(roomId, socket.id, playerId)
+      const room = mgr.kickPlayer(roomId, socket.id, playerId)
       io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
@@ -127,22 +183,20 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
   })
 
   socket.on('disconnect', () => {
-    // Find which room this socket is in
     for (const roomId of socket.rooms) {
       if (roomId === socket.id) continue
       try {
-        manager.disconnectPlayer(roomId, socket.id)
-        manager.transferHostIfNeeded(roomId)
-        const room = manager.getRoom(roomId)
+        mgr.disconnectPlayer(roomId, socket.id)
+        mgr.transferHostIfNeeded(roomId)
+        const room = mgr.getRoom(roomId)
         if (room) {
           io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
         }
-        // Schedule cleanup after 60s grace period
         setTimeout(() => {
-          const current = manager.getRoom(roomId)
+          const current = mgr.getRoom(roomId)
           if (current?.players[socket.id]?.isConnected === false) {
-            manager.kickPlayer(roomId, current.hostId, socket.id)
-            const updated = manager.getRoom(roomId)
+            mgr.kickPlayer(roomId, current.hostId, socket.id)
+            const updated = mgr.getRoom(roomId)
             if (updated) {
               io.to(roomId).emit('room:state', { phase: updated.phase, players: updated.players, hostId: updated.hostId })
             }

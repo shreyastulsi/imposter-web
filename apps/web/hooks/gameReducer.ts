@@ -4,6 +4,7 @@ export type GameScreen =
   | 'home'
   | 'lobby'
   | 'card_reveal'
+  | 'discussion'
   | 'voting'
   | 'awaiting_guess'
   | 'results'
@@ -22,6 +23,12 @@ export interface RoundResult {
   englishWord?: string
 }
 
+export interface DiscussionTurn {
+  playerId: string
+  turnNumber: 1 | 2
+  timeoutAt: number
+}
+
 export interface GameState {
   screen: GameScreen
   roomId: string | null
@@ -31,6 +38,7 @@ export interface GameState {
   players: Record<string, Player>
   hostId: string | null
   cardData: CardData | null
+  discussionTurn: DiscussionTurn | null
   voteTick: { count: number; total: number } | null
   voteReveal: VoteReveal | null
   guessResult: { correct: boolean; word: string } | null
@@ -42,6 +50,7 @@ export type Action =
   | { type: 'JOINED'; roomId: string; myId: string; nickname: string; players: Record<string, Player>; hostId: string; phase: GamePhase }
   | { type: 'ROOM_STATE'; players: Record<string, Player>; hostId: string; phase: GamePhase }
   | { type: 'CARD_DATA'; card: CardData }
+  | { type: 'DISCUSSION_TURN'; turn: DiscussionTurn }
   | { type: 'VOTE_TICK'; count: number; total: number }
   | { type: 'VOTE_REVEAL'; data: VoteReveal }
   | { type: 'GUESS_RESULT'; correct: boolean; word: string }
@@ -53,6 +62,7 @@ export function phaseToScreen(phase: GamePhase): GameScreen {
   const map: Record<GamePhase, GameScreen> = {
     lobby: 'lobby',
     card_reveal: 'card_reveal',
+    discussion: 'discussion',
     voting: 'voting',
     awaiting_guess: 'awaiting_guess',
     results: 'results',
@@ -69,6 +79,7 @@ export const initialState: GameState = {
   players: {},
   hostId: null,
   cardData: null,
+  discussionTurn: null,
   voteTick: null,
   voteReveal: null,
   guessResult: null,
@@ -100,6 +111,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
         hostId: action.hostId,
         isHost: state.myId ? action.players[state.myId]?.isHost ?? false : false,
         cardData: enteringLobby || enteringCardReveal ? null : state.cardData,
+        discussionTurn: enteringLobby || enteringCardReveal ? null : state.discussionTurn,
         voteTick: enteringLobby || enteringCardReveal ? null : state.voteTick,
         voteReveal: enteringLobby || enteringCardReveal ? null : state.voteReveal,
         roundResult: enteringLobby || enteringCardReveal ? null : state.roundResult,
@@ -107,6 +119,8 @@ export function gameReducer(state: GameState, action: Action): GameState {
     }
     case 'CARD_DATA':
       return { ...state, cardData: action.card, screen: 'card_reveal' }
+    case 'DISCUSSION_TURN':
+      return { ...state, discussionTurn: action.turn, screen: 'discussion' }
     case 'VOTE_TICK':
       return { ...state, voteTick: { count: action.count, total: action.total } }
     case 'VOTE_REVEAL':

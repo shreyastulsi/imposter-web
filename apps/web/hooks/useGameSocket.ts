@@ -59,6 +59,10 @@ export function useGameSocket() {
       dispatch({ type: 'CARD_DATA', card })
     })
 
+    socket.on('discussion:turn', (turn) => {
+      dispatch({ type: 'DISCUSSION_TURN', turn })
+    })
+
     socket.on('vote:tick', ({ count, total }) => {
       dispatch({ type: 'VOTE_TICK', count, total })
     })
@@ -87,6 +91,7 @@ export function useGameSocket() {
       socket.off('room:joined')
       socket.off('room:state')
       socket.off('card:data')
+      socket.off('discussion:turn')
       socket.off('vote:tick')
       socket.off('vote:reveal')
       socket.off('phase:results')
@@ -111,6 +116,14 @@ export function useGameSocket() {
 
   const acknowledgeCard = useCallback((roomId: string) => {
     getSocket().emit('card:acknowledge', { roomId })
+  }, [])
+
+  const startDiscussion = useCallback((roomId: string) => {
+    getSocket().emit('discussion:start', { roomId })
+  }, [])
+
+  const spoke = useCallback((roomId: string) => {
+    getSocket().emit('discussion:spoke', { roomId })
   }, [])
 
   const startVoting = useCallback((roomId: string) => {
@@ -141,6 +154,8 @@ export function useGameSocket() {
     joinRoom,
     startGame,
     acknowledgeCard,
+    startDiscussion,
+    spoke,
     startVoting,
     submitVote,
     judgeGuess,

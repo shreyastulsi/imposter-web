@@ -3,6 +3,7 @@ export type InfoLevel = 'none' | 'category' | 'hint'
 export type GamePhase =
   | 'lobby'
   | 'card_reveal'
+  | 'discussion'
   | 'voting'
   | 'awaiting_guess'
   | 'results'
@@ -34,6 +35,15 @@ export interface Round {
   votes: Record<string, string>
   result: 'civilians_win' | 'imposter_wins' | null
   guessCorrect: boolean | null
+  turnOrder?: string[]
+  currentTurnIndex?: number
+  discussionRound?: 1 | 2
+}
+
+export interface DiscussionTurnEvent {
+  playerId: string
+  turnNumber: 1 | 2
+  timeoutAt: number
 }
 
 export interface Room {

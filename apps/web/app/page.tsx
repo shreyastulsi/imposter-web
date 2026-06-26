@@ -5,6 +5,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import Home from '@/components/phases/Home'
 import Lobby from '@/components/phases/Lobby'
 import CardReveal from '@/components/phases/CardReveal'
+import Discussion from '@/components/phases/Discussion'
 import Voting from '@/components/phases/Voting'
 import AwaitingGuess from '@/components/phases/AwaitingGuess'
 import Results from '@/components/phases/Results'
@@ -43,7 +44,13 @@ function Game() {
         <CardReveal
           state={state}
           onAcknowledge={() => game.acknowledgeCard(state.roomId!)}
-          onStartVoting={() => game.startVoting(state.roomId!)}
+          onStartDiscussion={() => game.startDiscussion(state.roomId!)}
+        />
+      )}
+      {state.screen === 'discussion' && (
+        <Discussion
+          state={state}
+          onSpoke={() => game.spoke(state.roomId!)}
         />
       )}
       {state.screen === 'voting' && (
