@@ -19,6 +19,7 @@ export interface RoundResult {
   scores: Record<string, number>
   imposterId: string
   word: string
+  englishWord?: string
 }
 
 export interface GameState {

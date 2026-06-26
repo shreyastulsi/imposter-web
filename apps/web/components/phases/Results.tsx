@@ -1,6 +1,7 @@
 'use client'
 
 import type { GameState } from '@/hooks/useGameSocket'
+import { useLang } from '@/contexts/LanguageContext'
 
 interface Props {
   state: GameState
@@ -9,6 +10,7 @@ interface Props {
 
 export default function Results({ state, onNewRound }: Props) {
   const { roundResult, players, myId, isHost, voteReveal } = state
+  const { lang } = useLang()
 
   if (!roundResult) return null
 
@@ -39,7 +41,9 @@ export default function Results({ state, onNewRound }: Props) {
           <p className="text-white font-bold text-lg">{imposter?.nickname ?? '?'}</p>
           <div className="mt-3 border-t border-white/10 pt-3">
             <p className="text-white/40 text-xs mb-1">The word was</p>
-            <p className="text-white font-black text-2xl">{roundResult.word}</p>
+            <p className="text-white font-black text-2xl">
+              {lang === 'en' ? (roundResult.englishWord ?? roundResult.word) : roundResult.word}
+            </p>
             <p className="text-white/40 text-sm mt-1">
               {civiliansWon
                 ? "Imposter couldn't guess the word"

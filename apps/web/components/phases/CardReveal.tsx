@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { GameState } from '@/hooks/useGameSocket'
+import { useLang } from '@/contexts/LanguageContext'
 
 interface Props {
   state: GameState
@@ -12,6 +13,11 @@ interface Props {
 export default function CardReveal({ state, onAcknowledge, onStartVoting }: Props) {
   const [flipped, setFlipped] = useState(false)
   const { cardData, players, isHost, myId } = state
+  const { lang } = useLang()
+
+  const displayWord = lang === 'en' ? (cardData?.english ?? cardData?.word) : cardData?.word
+  const displayCategory = lang === 'en' ? (cardData?.englishCategory ?? cardData?.category) : cardData?.category
+  const displayHint = lang === 'en' ? (cardData?.englishHint ?? cardData?.hint) : cardData?.hint
 
   const revealedCount = Object.values(players).filter(p => p.hasRevealed).length
   const totalCount = Object.values(players).filter(p => p.isConnected).length
@@ -73,34 +79,31 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
                     <div className="text-5xl mb-4">🕵️</div>
                     <p className="text-red-400 font-black text-2xl mb-2">IMPOSTER</p>
                     <p className="text-white/60 text-sm">You are the imposter!</p>
-                    {cardData.category && (
+                    {displayCategory && (
                       <div className="mt-4 bg-white/5 rounded-xl p-3">
                         <p className="text-white/40 text-xs">Category</p>
-                        <p className="text-white font-semibold">{cardData.category}</p>
+                        <p className="text-white font-semibold">{displayCategory}</p>
                       </div>
                     )}
-                    {cardData.hint && (
+                    {displayHint && (
                       <div className="mt-2 bg-white/5 rounded-xl p-3">
                         <p className="text-white/40 text-xs">Hint</p>
-                        <p className="text-white font-semibold">{cardData.hint}</p>
+                        <p className="text-white font-semibold">{displayHint}</p>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="text-center">
                     <p className="text-green-400/60 text-xs uppercase tracking-widest mb-3">Word</p>
-                    <p className="text-white font-black text-4xl mb-1">{cardData.word}</p>
-                    {cardData.english && (
-                      <p className="text-white/50 text-lg mb-4">{cardData.english}</p>
-                    )}
+                    <p className="text-white font-black text-4xl mb-1">{displayWord}</p>
                     <div className="bg-white/5 rounded-xl p-3">
                       <p className="text-white/40 text-xs">Category</p>
-                      <p className="text-white font-semibold">{cardData.category}</p>
+                      <p className="text-white font-semibold">{displayCategory}</p>
                     </div>
-                    {cardData.hint && (
+                    {displayHint && (
                       <div className="mt-2 bg-white/5 rounded-xl p-3">
                         <p className="text-white/40 text-xs">Hint</p>
-                        <p className="text-white font-semibold">{cardData.hint}</p>
+                        <p className="text-white font-semibold">{displayHint}</p>
                       </div>
                     )}
                   </div>

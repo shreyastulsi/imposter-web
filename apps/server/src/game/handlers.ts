@@ -80,6 +80,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
             scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
             imposterId: result.imposterId,
             word: room.round?.word.word,
+            englishWord: room.round?.word.english,
           })
         } else {
           const room = manager.getRoom(roomId)
@@ -100,6 +101,7 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
         scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
         imposterId: room.round?.imposterId,
         word: room.round?.word.word,
+        englishWord: room.round?.word.english,
       })
     } catch (e: any) {
       socket.emit('error', { code: e.message })

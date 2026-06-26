@@ -12,7 +12,9 @@ export interface WordEntry {
   word: string
   english: string
   category: string
+  englishCategory: string
   hint: string
+  englishHint: string
 }
 
 export interface Player {
@@ -48,7 +50,9 @@ export interface CardData {
   word?: string
   english?: string
   category?: string
+  englishCategory?: string
   hint?: string
+  englishHint?: string
 }
 
 export interface VoteResult {

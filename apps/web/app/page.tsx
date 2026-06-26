@@ -1,6 +1,7 @@
 'use client'
 
 import { useGameSocket } from '@/hooks/useGameSocket'
+import { LanguageProvider, useLang } from '@/contexts/LanguageContext'
 import Home from '@/components/phases/Home'
 import Lobby from '@/components/phases/Lobby'
 import CardReveal from '@/components/phases/CardReveal'
@@ -8,7 +9,29 @@ import Voting from '@/components/phases/Voting'
 import AwaitingGuess from '@/components/phases/AwaitingGuess'
 import Results from '@/components/phases/Results'
 
-export default function Page() {
+function FlagToggle() {
+  const { lang, setLang } = useLang()
+  return (
+    <div className="fixed top-3 right-3 z-50 flex gap-1 bg-white/5 rounded-xl p-1 border border-white/10">
+      <button
+        onClick={() => setLang('hi')}
+        className={`text-xl px-2 py-1 rounded-lg transition-opacity ${lang === 'hi' ? 'opacity-100 bg-white/10' : 'opacity-30'}`}
+        aria-label="Hindi"
+      >
+        🇮🇳
+      </button>
+      <button
+        onClick={() => setLang('en')}
+        className={`text-xl px-2 py-1 rounded-lg transition-opacity ${lang === 'en' ? 'opacity-100 bg-white/10' : 'opacity-30'}`}
+        aria-label="English"
+      >
+        🇺🇸
+      </button>
+    </div>
+  )
+}
+
+function Game() {
   const game = useGameSocket()
   const { state } = game
 
@@ -64,5 +87,14 @@ export default function Page() {
         />
       )}
     </div>
+  )
+}
+
+export default function Page() {
+  return (
+    <LanguageProvider>
+      <FlagToggle />
+      <Game />
+    </LanguageProvider>
   )
 }
