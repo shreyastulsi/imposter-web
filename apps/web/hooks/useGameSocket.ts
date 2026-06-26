@@ -8,15 +8,32 @@ import type { InfoLevel, CardData } from '@imposter/shared'
 
 export type { GameScreen, GameState, VoteReveal, RoundResult } from './gameReducer'
 
+const SESSION_ROOM = 'imposter_roomId'
+const SESSION_PLAYER = 'imposter_playerId'
+
 export function useGameSocket() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const nicknameRef = useRef<string>('')
+  const autoReconnecting = useRef(false)
 
   useEffect(() => {
     const socket = getSocket()
     socket.connect()
 
+    // On every (re)connect, attempt to resume a previous session
+    socket.on('connect', () => {
+      const savedRoomId = sessionStorage.getItem(SESSION_ROOM)
+      const savedPlayerId = sessionStorage.getItem(SESSION_PLAYER)
+      if (savedRoomId && savedPlayerId) {
+        autoReconnecting.current = true
+        socket.emit('room:reconnect', { roomId: savedRoomId, playerId: savedPlayerId })
+      }
+    })
+
     socket.on('room:joined', ({ roomId, player, room }) => {
+      autoReconnecting.current = false
+      sessionStorage.setItem(SESSION_ROOM, roomId)
+      sessionStorage.setItem(SESSION_PLAYER, player.id)
       dispatch({
         type: 'JOINED',
         roomId,
@@ -49,10 +66,18 @@ export function useGameSocket() {
     })
 
     socket.on('error', ({ code }: { code: string }) => {
+      if (autoReconnecting.current) {
+        // Auto-reconnect failed (room gone or kicked) — clear session silently
+        autoReconnecting.current = false
+        sessionStorage.removeItem(SESSION_ROOM)
+        sessionStorage.removeItem(SESSION_PLAYER)
+        return
+      }
       dispatch({ type: 'ERROR', message: code })
     })
 
     return () => {
+      socket.off('connect')
       socket.off('room:joined')
       socket.off('room:state')
       socket.off('card:data')
