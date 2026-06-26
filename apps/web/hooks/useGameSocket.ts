@@ -10,6 +10,7 @@ export type { GameScreen, GameState, VoteReveal, RoundResult } from './gameReduc
 
 const SESSION_ROOM = 'imposter_roomId'
 const SESSION_PLAYER = 'imposter_playerId'
+const store = typeof window !== 'undefined' ? localStorage : null
 
 export function useGameSocket() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
@@ -22,8 +23,8 @@ export function useGameSocket() {
 
     // On every (re)connect, attempt to resume a previous session
     socket.on('connect', () => {
-      const savedRoomId = sessionStorage.getItem(SESSION_ROOM)
-      const savedPlayerId = sessionStorage.getItem(SESSION_PLAYER)
+      const savedRoomId = store?.getItem(SESSION_ROOM)
+      const savedPlayerId = store?.getItem(SESSION_PLAYER)
       if (savedRoomId && savedPlayerId) {
         autoReconnecting.current = true
         socket.emit('room:reconnect', { roomId: savedRoomId, playerId: savedPlayerId })
@@ -32,8 +33,8 @@ export function useGameSocket() {
 
     socket.on('room:joined', ({ roomId, player, room }) => {
       autoReconnecting.current = false
-      sessionStorage.setItem(SESSION_ROOM, roomId)
-      sessionStorage.setItem(SESSION_PLAYER, player.id)
+      store?.setItem(SESSION_ROOM, roomId)
+      store?.setItem(SESSION_PLAYER, player.id)
       dispatch({
         type: 'JOINED',
         roomId,
@@ -69,8 +70,8 @@ export function useGameSocket() {
       if (autoReconnecting.current) {
         // Auto-reconnect failed (room gone or kicked) — clear session silently
         autoReconnecting.current = false
-        sessionStorage.removeItem(SESSION_ROOM)
-        sessionStorage.removeItem(SESSION_PLAYER)
+        store?.removeItem(SESSION_ROOM)
+        store?.removeItem(SESSION_PLAYER)
         return
       }
       dispatch({ type: 'ERROR', message: code })
