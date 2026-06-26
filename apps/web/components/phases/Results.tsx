@@ -40,11 +40,13 @@ export default function Results({ state, onNewRound }: Props) {
           <div className="mt-3 border-t border-white/10 pt-3">
             <p className="text-white/40 text-xs mb-1">The word was</p>
             <p className="text-white font-black text-2xl">{roundResult.word}</p>
-            {voteReveal && (
-              <p className="text-white/40 text-sm mt-1">
-                {civiliansWon ? "Imposter couldn't guess the word" : 'Imposter guessed the word correctly!'}
-              </p>
-            )}
+            <p className="text-white/40 text-sm mt-1">
+              {civiliansWon
+                ? "Imposter couldn't guess the word"
+                : voteReveal?.majorityCaught
+                  ? 'Imposter guessed the word correctly!'
+                  : "Imposter wasn't caught — not enough votes!"}
+            </p>
           </div>
         </div>
 
