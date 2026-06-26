@@ -16,13 +16,18 @@ export function useGameSocket() {
   const [state, dispatch] = useReducer(gameReducer, initialState)
   const nicknameRef = useRef<string>('')
   const autoReconnecting = useRef(false)
+  const hasConnectedBefore = useRef(false)
 
   useEffect(() => {
     const socket = getSocket()
     socket.connect()
 
-    // On every (re)connect, attempt to resume a previous session
+    // Skip reconnect on initial connect — only attempt after a genuine disconnect+reconnect
     socket.on('connect', () => {
+      if (!hasConnectedBefore.current) {
+        hasConnectedBefore.current = true
+        return
+      }
       const savedRoomId = store?.getItem(SESSION_ROOM)
       const savedPlayerId = store?.getItem(SESSION_PLAYER)
       if (savedRoomId && savedPlayerId) {
