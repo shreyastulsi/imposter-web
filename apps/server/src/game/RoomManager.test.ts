@@ -227,10 +227,10 @@ describe('voting', () => {
   })
 })
 
-// ─── Behaviors 11+12: submitGuess ────────────────────────────────────────────
+// ─── Behaviors 11+12+13+14: hostJudgeGuess ───────────────────────────────────
 
-describe('submitGuess', () => {
-  function setupGuessRoom() {
+describe('hostJudgeGuess', () => {
+  function setupAwaitingGuessRoom() {
     const room = manager.createRoom('s1', 'A', 'none')
     manager.joinRoom(room.id, 's2', 'B')
     manager.joinRoom(room.id, 's3', 'C')
@@ -242,21 +242,33 @@ describe('submitGuess', () => {
     manager.submitVote(room.id, civilians[1], imposterId)
     manager.submitVote(room.id, imposterId, civilians[0])
     manager.tallyVotes(room.id)
-    return { roomId: room.id, word: started.round!.word.word }
+    return { roomId: room.id, hostId: 's1' }
   }
 
-  it('correct guess gives imposter the win', () => {
-    const { roomId, word } = setupGuessRoom()
-    const result = manager.submitGuess(roomId, word)
-    expect(result.correct).toBe(true)
+  it('host marking correct gives imposter the win', () => {
+    const { roomId, hostId } = setupAwaitingGuessRoom()
+    const result = manager.hostJudgeGuess(roomId, hostId, true)
     expect(result.result).toBe('imposter_wins')
   })
 
-  it('wrong guess gives civilians the win', () => {
-    const { roomId } = setupGuessRoom()
-    const result = manager.submitGuess(roomId, 'गलत जवाब')
-    expect(result.correct).toBe(false)
+  it('host marking wrong gives civilians the win', () => {
+    const { roomId, hostId } = setupAwaitingGuessRoom()
+    const result = manager.hostJudgeGuess(roomId, hostId, false)
     expect(result.result).toBe('civilians_win')
+  })
+
+  it('throws not_host if non-host calls', () => {
+    const { roomId } = setupAwaitingGuessRoom()
+    expect(() => manager.hostJudgeGuess(roomId, 's2', true)).toThrow('not_host')
+  })
+
+  it('throws wrong_phase if room is not in awaiting_guess phase', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    manager.startGame(room.id, 's1')
+    manager.startVoting(room.id, 's1')
+    expect(() => manager.hostJudgeGuess(room.id, 's1', true)).toThrow('wrong_phase')
   })
 })
 

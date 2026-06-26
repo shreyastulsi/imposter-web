@@ -1,75 +1,50 @@
 'use client'
 
-import { useState } from 'react'
 import type { GameState } from '@/hooks/useGameSocket'
 
 interface Props {
   state: GameState
-  onGuess: (guess: string) => void
+  onJudge: (correct: boolean) => void
 }
 
-export default function AwaitingGuess({ state, onGuess }: Props) {
-  const [guess, setGuess] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const { voteReveal, myId, guessResult } = state
-
-  const isImposter = voteReveal?.imposterId === myId
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!guess.trim() || submitted) return
-    setSubmitted(true)
-    onGuess(guess.trim())
-  }
-
-  if (guessResult) {
-    return (
-      <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#0f0f23]">
-        <div className="text-center">
-          <div className="text-6xl mb-4">{guessResult.correct ? '🎉' : '❌'}</div>
-          <p className="text-white font-bold text-2xl">
-            {guessResult.correct ? 'Correct guess!' : 'Wrong guess!'}
-          </p>
-          <p className="text-white/50 mt-2">Waiting for results...</p>
-        </div>
-      </div>
-    )
-  }
+export default function AwaitingGuess({ state, onJudge }: Props) {
+  const { voteReveal, myId, isHost } = state
+  const imposterId = voteReveal?.imposterId
+  const imposterName = imposterId ? state.players[imposterId]?.nickname : 'The imposter'
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#0f0f23]">
-      <div className="w-full max-w-sm">
-        {isImposter ? (
+      <div className="w-full max-w-sm text-center">
+        <div className="text-5xl mb-4">🕵️</div>
+        <h2 className="text-white font-black text-2xl mb-2">Last Chance!</h2>
+        <p className="text-white/60 text-sm mb-8">
+          <span className="text-yellow-400 font-semibold">{imposterName}</span> must say the word out loud.
+        </p>
+
+        {isHost ? (
           <>
-            <div className="text-center mb-8">
-              <div className="text-5xl mb-4">🕵️</div>
-              <h2 className="text-white font-black text-2xl">Last chance!</h2>
-              <p className="text-white/50 mt-2 text-sm">Guess the word correctly and you still win!</p>
-            </div>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <input
-                className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-4 text-xl text-center outline-none focus:ring-2 focus:ring-yellow-500"
-                placeholder="What was the word?"
-                value={guess}
-                onChange={e => setGuess(e.target.value)}
-                disabled={submitted}
-                autoFocus
-              />
+            <p className="text-white/40 text-xs mb-6">Did they get it right?</p>
+            <div className="flex gap-4">
               <button
-                type="submit"
-                disabled={!guess.trim() || submitted}
-                className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+                onClick={() => onJudge(false)}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
               >
-                {submitted ? 'Guess submitted...' : 'Submit Guess'}
+                Wrong
               </button>
-            </form>
+              <button
+                onClick={() => onJudge(true)}
+                className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+              >
+                Correct
+              </button>
+            </div>
           </>
         ) : (
-          <div className="text-center">
-            <div className="text-5xl mb-4 animate-pulse">🕵️</div>
-            <h2 className="text-white font-bold text-xl">Imposter is guessing...</h2>
-            <p className="text-white/40 text-sm mt-2">Do they know the word?</p>
-          </div>
+          <p className="text-white/40 text-sm animate-pulse">
+            {myId === imposterId
+              ? 'Say the word out loud — the host will decide!'
+              : 'Waiting for the host to judge the guess...'}
+          </p>
         )}
       </div>
     </div>

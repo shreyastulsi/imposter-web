@@ -81,6 +81,9 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
             imposterId: result.imposterId,
             word: room.round?.word.word,
           })
+        } else {
+          const room = manager.getRoom(roomId)
+          if (room) io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
         }
       }
     } catch (e: any) {
@@ -88,13 +91,12 @@ export function registerHandlers(io: Server, socket: Socket, manager: RoomManage
     }
   })
 
-  socket.on('guess:submit', ({ roomId, guess }) => {
+  socket.on('guess:judge', ({ roomId, correct }) => {
     try {
-      const guessResult = manager.submitGuess(roomId, guess)
-      io.to(roomId).emit('guess:result', { correct: guessResult.correct, word: guess })
-      const room = manager.finalizeResult(roomId, guessResult.result)
+      const judgeResult = manager.hostJudgeGuess(roomId, socket.id, correct)
+      const room = manager.finalizeResult(roomId, judgeResult.result)
       io.to(roomId).emit('phase:results', {
-        result: guessResult.result,
+        result: judgeResult.result,
         scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
         imposterId: room.round?.imposterId,
         word: room.round?.word.word,

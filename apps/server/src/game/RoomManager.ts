@@ -152,14 +152,15 @@ export class RoomManager {
     return { majorityCaught, imposterId: round.imposterId, votes: { ...round.votes } }
   }
 
-  submitGuess(roomId: string, guess: string): GuessResult {
+  hostJudgeGuess(roomId: string, hostId: string, correct: boolean): { result: 'civilians_win' | 'imposter_wins' } {
     const room = this.getWritableRoom(roomId)
+    if (room.hostId !== hostId) throw new Error('not_host')
+    if (room.phase !== 'awaiting_guess') throw new Error('wrong_phase')
     const round = this.requireRound(room)
-    const correct = guess.trim() === round.word.word.trim()
+    const result = correct ? 'imposter_wins' : 'civilians_win'
     round.guessCorrect = correct
-    round.result = correct ? 'imposter_wins' : 'civilians_win'
-    room.phase = 'results'
-    return { correct, result: round.result }
+    round.result = result
+    return { result }
   }
 
   finalizeResult(roomId: string, result: 'civilians_win' | 'imposter_wins'): Room {

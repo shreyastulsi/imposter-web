@@ -54,7 +54,7 @@ export default function Page() {
       {state.screen === 'awaiting_guess' && (
         <AwaitingGuess
           state={state}
-          onGuess={(g) => game.submitGuess(state.roomId!, g)}
+          onJudge={(correct) => game.judgeGuess(state.roomId!, correct)}
         />
       )}
       {state.screen === 'results' && (

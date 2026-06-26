@@ -160,10 +160,6 @@ export function useGameSocket() {
       dispatch({ type: 'VOTE_REVEAL', data })
     })
 
-    socket.on('guess:result', ({ correct, word }) => {
-      dispatch({ type: 'GUESS_RESULT', correct, word })
-    })
-
     socket.on('phase:results', (data: RoundResult) => {
       dispatch({ type: 'ROUND_RESULT', data })
     })
@@ -178,7 +174,6 @@ export function useGameSocket() {
       socket.off('card:data')
       socket.off('vote:tick')
       socket.off('vote:reveal')
-      socket.off('guess:result')
       socket.off('phase:results')
       socket.off('error')
       socket.disconnect()
@@ -211,8 +206,8 @@ export function useGameSocket() {
     getSocket().emit('vote:submit', { roomId, targetPlayerId })
   }, [])
 
-  const submitGuess = useCallback((roomId: string, guess: string) => {
-    getSocket().emit('guess:submit', { roomId, guess })
+  const judgeGuess = useCallback((roomId: string, correct: boolean) => {
+    getSocket().emit('guess:judge', { roomId, correct })
   }, [])
 
   const startNewRound = useCallback((roomId: string) => {
@@ -233,7 +228,7 @@ export function useGameSocket() {
     acknowledgeCard,
     startVoting,
     submitVote,
-    submitGuess,
+    judgeGuess,
     startNewRound,
     kickPlayer,
     clearError,
