@@ -13,7 +13,7 @@ interface Props {
 export default function CardReveal({ state, onAcknowledge, onStartVoting }: Props) {
   const [flipped, setFlipped] = useState(false)
   const { cardData, players, isHost, myId } = state
-  const { lang } = useLang()
+  const { lang, setLang } = useLang()
 
   const displayWord = lang === 'en' ? (cardData?.english ?? cardData?.word) : cardData?.word
   const displayCategory = lang === 'en' ? (cardData?.englishCategory ?? cardData?.category) : cardData?.category
@@ -115,6 +115,26 @@ export default function CardReveal({ state, onAcknowledge, onStartVoting }: Prop
           </div>
         </div>
       </div>
+
+      {flipped && (
+        <div className="flex items-center gap-2 bg-white/5 rounded-full px-3 py-1.5 border border-white/10">
+          <button
+            onClick={() => setLang('hi')}
+            className={`text-lg px-2 py-0.5 rounded-full transition-all ${lang === 'hi' ? 'bg-white/15 opacity-100' : 'opacity-30'}`}
+            aria-label="Hindi"
+          >
+            🇮🇳
+          </button>
+          <span className="text-white/20 text-xs">|</span>
+          <button
+            onClick={() => setLang('en')}
+            className={`text-lg px-2 py-0.5 rounded-full transition-all ${lang === 'en' ? 'bg-white/15 opacity-100' : 'opacity-30'}`}
+            aria-label="English"
+          >
+            🇺🇸
+          </button>
+        </div>
+      )}
 
       <div className="w-full max-w-xs flex flex-col gap-3">
         <div className="flex justify-between text-sm text-white/40">
