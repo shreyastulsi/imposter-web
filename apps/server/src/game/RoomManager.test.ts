@@ -430,10 +430,9 @@ describe('advanceTurn', () => {
     expect(room.round!.currentTurnIndex).toBe(0)
   })
 
-  it('returns done after all players finish round 2 and transitions to voting', () => {
+  it('returns done after all players finish round 2 and transitions to word_review', () => {
     const roomId = setupDiscussion(manager)
     manager.startDiscussion(roomId, 's1')
-    // 5 advances exhaust round 1 (2) + round 2 (3 triggers done on last)
     manager.advanceTurn(roomId)
     manager.advanceTurn(roomId)
     manager.advanceTurn(roomId) // wraps to round 2
@@ -442,9 +441,68 @@ describe('advanceTurn', () => {
     const result = manager.advanceTurn(roomId) // last player in round 2
     expect(result.done).toBe(true)
     const room = manager.getRoom(roomId)!
-    expect(room.phase).toBe('voting')
+    expect(room.phase).toBe('word_review')
+  })
+})
+
+// ─── Behavior: recordWord + getWordReviewData ─────────────────────────────────
+
+describe('recordWord', () => {
+  it('stores a word for round 1', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const firstPlayer = room.round!.turnOrder![0]
+    manager.recordWord(roomId, firstPlayer, 'fire', 1)
+    const updated = manager.getRoom(roomId)!
+    expect(updated.round!.spokenWords![firstPlayer].round1).toBe('fire')
   })
 
+  it('stores a word for round 2', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const firstPlayer = room.round!.turnOrder![0]
+    manager.recordWord(roomId, firstPlayer, 'water', 2)
+    const updated = manager.getRoom(roomId)!
+    expect(updated.round!.spokenWords![firstPlayer].round2).toBe('water')
+  })
+})
+
+describe('getWordReviewData', () => {
+  it('returns entries in turn order with recorded words', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const order = room.round!.turnOrder!
+    manager.recordWord(roomId, order[0], 'fire', 1)
+    manager.recordWord(roomId, order[1], 'ice', 1)
+    manager.recordWord(roomId, order[2], 'rain', 1)
+    manager.recordWord(roomId, order[0], 'smoke', 2)
+    manager.recordWord(roomId, order[1], '—', 2)
+    manager.recordWord(roomId, order[2], 'fog', 2)
+    const data = manager.getWordReviewData(roomId)
+    expect(data.entries).toHaveLength(3)
+    expect(data.entries[0].playerId).toBe(order[0])
+    expect(data.entries[0].round1).toBe('fire')
+    expect(data.entries[0].round2).toBe('smoke')
+    expect(data.entries[1].round2).toBe('—')
+  })
+
+  it('fills missing words with dash', () => {
+    const roomId = setupDiscussion(manager)
+    manager.startDiscussion(roomId, 's1')
+    const room = manager.getRoom(roomId)!
+    const order = room.round!.turnOrder!
+    // record nothing for order[0]
+    manager.recordWord(roomId, order[1], 'ice', 1)
+    const data = manager.getWordReviewData(roomId)
+    expect(data.entries[0].round1).toBe('—')
+    expect(data.entries[0].round2).toBe('—')
+  })
+})
+
+describe('advanceTurn — skips disconnected', () => {
   it('skips disconnected players', () => {
     const roomId = setupDiscussion(manager)
     manager.startDiscussion(roomId, 's1')
@@ -452,7 +510,6 @@ describe('advanceTurn', () => {
     const secondPlayer = room.round!.turnOrder![1]
     manager.disconnectPlayer(roomId, secondPlayer)
     const result = manager.advanceTurn(roomId)
-    // should skip the disconnected player
     expect(result.playerId).not.toBe(secondPlayer)
   })
 })

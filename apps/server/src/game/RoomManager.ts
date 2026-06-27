@@ -5,6 +5,7 @@ import type {
   WordEntry,
   CardData,
   GuessResult,
+  WordReviewEvent,
 } from '@imposter/shared'
 
 interface VoteTick {
@@ -119,7 +120,7 @@ export class RoomManager {
     // If we've exhausted this round, move to next round or finish
     if (index >= order.length) {
       if (discussionRound === 2) {
-        room.phase = 'voting'
+        room.phase = 'word_review'
         return { done: true }
       }
       discussionRound = 2
@@ -131,7 +132,7 @@ export class RoomManager {
       index++
       if (index >= order.length) {
         if (discussionRound === 2) {
-          room.phase = 'voting'
+          room.phase = 'word_review'
           return { done: true }
         }
         discussionRound = 2
@@ -142,6 +143,29 @@ export class RoomManager {
     round.currentTurnIndex = index
     round.discussionRound = discussionRound
     return { done: false, playerId: order[index], turnNumber: discussionRound }
+  }
+
+  recordWord(roomId: string, playerId: string, word: string, roundNumber: 1 | 2): void {
+    const room = this.getWritableRoom(roomId)
+    const round = this.requireRound(room)
+    if (!round.spokenWords) round.spokenWords = {}
+    if (!round.spokenWords[playerId]) round.spokenWords[playerId] = {}
+    if (roundNumber === 1) round.spokenWords[playerId].round1 = word
+    else round.spokenWords[playerId].round2 = word
+  }
+
+  getWordReviewData(roomId: string): WordReviewEvent {
+    const room = this.getWritableRoom(roomId)
+    const round = this.requireRound(room)
+    const order = round.turnOrder ?? []
+    const words = round.spokenWords ?? {}
+    return {
+      entries: order.map(playerId => ({
+        playerId,
+        round1: words[playerId]?.round1 ?? '—',
+        round2: words[playerId]?.round2 ?? '—',
+      })),
+    }
   }
 
   startVoting(roomId: string, callerId: string): Room {
