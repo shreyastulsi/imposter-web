@@ -6,7 +6,6 @@ import Home from '@/components/phases/Home'
 import Lobby from '@/components/phases/Lobby'
 import CardReveal from '@/components/phases/CardReveal'
 import Discussion from '@/components/phases/Discussion'
-import WordReview from '@/components/phases/WordReview'
 import Voting from '@/components/phases/Voting'
 import AwaitingGuess from '@/components/phases/AwaitingGuess'
 import Results from '@/components/phases/Results'
@@ -51,14 +50,7 @@ function Game() {
       {state.screen === 'discussion' && (
         <Discussion
           state={state}
-          onRecording={() => game.startRecording(state.roomId!)}
-          onSpoke={(word) => game.spoke(state.roomId!, word)}
-        />
-      )}
-      {state.screen === 'word_review' && (
-        <WordReview
-          state={state}
-          onStartVoting={() => game.startVoting(state.roomId!)}
+          onSpoke={() => game.spoke(state.roomId!)}
         />
       )}
       {state.screen === 'voting' && (

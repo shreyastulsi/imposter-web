@@ -6,7 +6,7 @@ import { gameReducer, initialState } from './gameReducer'
 import type { GameState, Action } from './gameReducer'
 import type { InfoLevel, CardData } from '@imposter/shared'
 
-export type { GameScreen, GameState, VoteReveal, RoundResult, WordReviewEntry } from './gameReducer'
+export type { GameScreen, GameState, VoteReveal, RoundResult } from './gameReducer'
 
 const SESSION_ROOM = 'imposter_roomId'
 const SESSION_PLAYER = 'imposter_playerId'
@@ -63,10 +63,6 @@ export function useGameSocket() {
       dispatch({ type: 'DISCUSSION_TURN', turn })
     })
 
-    socket.on('discussion:review', ({ entries }) => {
-      dispatch({ type: 'WORD_REVIEW', entries })
-    })
-
     socket.on('vote:tick', ({ count, total }) => {
       dispatch({ type: 'VOTE_TICK', count, total })
     })
@@ -96,7 +92,6 @@ export function useGameSocket() {
       socket.off('room:state')
       socket.off('card:data')
       socket.off('discussion:turn')
-      socket.off('discussion:review')
       socket.off('vote:tick')
       socket.off('vote:reveal')
       socket.off('phase:results')
@@ -127,12 +122,8 @@ export function useGameSocket() {
     getSocket().emit('discussion:start', { roomId })
   }, [])
 
-  const startRecording = useCallback((roomId: string) => {
-    getSocket().emit('discussion:recording', { roomId })
-  }, [])
-
-  const spoke = useCallback((roomId: string, word: string) => {
-    getSocket().emit('discussion:spoke', { roomId, word })
+  const spoke = useCallback((roomId: string) => {
+    getSocket().emit('discussion:spoke', { roomId })
   }, [])
 
   const startVoting = useCallback((roomId: string) => {
@@ -164,7 +155,6 @@ export function useGameSocket() {
     startGame,
     acknowledgeCard,
     startDiscussion,
-    startRecording,
     spoke,
     startVoting,
     submitVote,

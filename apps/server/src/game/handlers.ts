@@ -18,23 +18,13 @@ function emitTurn(io: Server, mgr: RoomManager, roomId: string, playerId: string
   }, TURN_DURATION_MS))
 }
 
-function advanceTurnAndBroadcast(io: Server, mgr: RoomManager, roomId: string, autoWord?: string) {
+function advanceTurnAndBroadcast(io: Server, mgr: RoomManager, roomId: string) {
   clearTurnTimer(roomId)
   try {
-    const room = mgr.getRoom(roomId)
-    if (!room?.round) return
-    const currentPlayerId = room.round.turnOrder?.[room.round.currentTurnIndex ?? 0]
-    const currentRound = room.round.discussionRound ?? 1
-    if (currentPlayerId) {
-      mgr.recordWord(roomId, currentPlayerId, autoWord ?? '—', currentRound)
-    }
     const result = mgr.advanceTurn(roomId)
     if (result.done) {
-      const updated = mgr.getRoom(roomId)
-      if (updated) {
-        io.to(roomId).emit('room:state', { phase: updated.phase, players: updated.players, hostId: updated.hostId })
-        io.to(roomId).emit('discussion:review', mgr.getWordReviewData(roomId))
-      }
+      const room = mgr.getRoom(roomId)
+      if (room) io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
     } else {
       emitTurn(io, mgr, roomId, result.playerId, result.turnNumber)
     }
@@ -96,39 +86,14 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
     }
   })
 
-  socket.on('discussion:recording', ({ roomId }) => {
+  socket.on('discussion:spoke', ({ roomId }) => {
     try {
       const room = mgr.getRoom(roomId)
-      if (!room?.round) return
-      if (room.round.turnOrder![room.round.currentTurnIndex!] !== socket.id) return
-      // Player has committed to their turn — clear auto-advance timer, give 60s to finish
-      clearTurnTimer(roomId)
-      turnTimers.set(roomId, setTimeout(() => {
-        advanceTurnAndBroadcast(io, mgr, roomId)
-      }, 60_000))
-    } catch {
-      // ignore
-    }
-  })
-
-  socket.on('discussion:spoke', ({ roomId, word }) => {
-    try {
-      const room = mgr.getRoom(roomId)
-      if (!room?.round) return
-      const round = room.round
+      if (!room) return
+      const round = room.round!
+      // Only the active player can advance
       if (round.turnOrder![round.currentTurnIndex!] !== socket.id) return
-      clearTurnTimer(roomId)
-      mgr.recordWord(roomId, socket.id, word ?? '—', round.discussionRound ?? 1)
-      const result = mgr.advanceTurn(roomId)
-      if (result.done) {
-        const updated = mgr.getRoom(roomId)
-        if (updated) {
-          io.to(roomId).emit('room:state', { phase: updated.phase, players: updated.players, hostId: updated.hostId })
-          io.to(roomId).emit('discussion:review', mgr.getWordReviewData(roomId))
-        }
-      } else {
-        emitTurn(io, mgr, roomId, result.playerId, result.turnNumber)
-      }
+      advanceTurnAndBroadcast(io, mgr, roomId)
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }

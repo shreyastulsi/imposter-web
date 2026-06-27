@@ -4,7 +4,6 @@ export type GamePhase =
   | 'lobby'
   | 'card_reveal'
   | 'discussion'
-  | 'word_review'
   | 'voting'
   | 'awaiting_guess'
   | 'results'
@@ -39,23 +38,12 @@ export interface Round {
   turnOrder?: string[]
   currentTurnIndex?: number
   discussionRound?: 1 | 2
-  spokenWords?: Record<string, { round1?: string; round2?: string }>
 }
 
 export interface DiscussionTurnEvent {
   playerId: string
   turnNumber: 1 | 2
   timeoutAt: number
-}
-
-export interface WordReviewEntry {
-  playerId: string
-  round1: string
-  round2: string
-}
-
-export interface WordReviewEvent {
-  entries: WordReviewEntry[]
 }
 
 export interface Room {

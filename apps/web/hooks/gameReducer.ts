@@ -5,7 +5,6 @@ export type GameScreen =
   | 'lobby'
   | 'card_reveal'
   | 'discussion'
-  | 'word_review'
   | 'voting'
   | 'awaiting_guess'
   | 'results'
@@ -30,12 +29,6 @@ export interface DiscussionTurn {
   timeoutAt: number
 }
 
-export interface WordReviewEntry {
-  playerId: string
-  round1: string
-  round2: string
-}
-
 export interface GameState {
   screen: GameScreen
   roomId: string | null
@@ -46,7 +39,6 @@ export interface GameState {
   hostId: string | null
   cardData: CardData | null
   discussionTurn: DiscussionTurn | null
-  wordReview: WordReviewEntry[] | null
   voteTick: { count: number; total: number } | null
   voteReveal: VoteReveal | null
   guessResult: { correct: boolean; word: string } | null
@@ -59,7 +51,6 @@ export type Action =
   | { type: 'ROOM_STATE'; players: Record<string, Player>; hostId: string; phase: GamePhase }
   | { type: 'CARD_DATA'; card: CardData }
   | { type: 'DISCUSSION_TURN'; turn: DiscussionTurn }
-  | { type: 'WORD_REVIEW'; entries: WordReviewEntry[] }
   | { type: 'VOTE_TICK'; count: number; total: number }
   | { type: 'VOTE_REVEAL'; data: VoteReveal }
   | { type: 'GUESS_RESULT'; correct: boolean; word: string }
@@ -72,7 +63,6 @@ export function phaseToScreen(phase: GamePhase): GameScreen {
     lobby: 'lobby',
     card_reveal: 'card_reveal',
     discussion: 'discussion',
-    word_review: 'word_review',
     voting: 'voting',
     awaiting_guess: 'awaiting_guess',
     results: 'results',
@@ -90,7 +80,6 @@ export const initialState: GameState = {
   hostId: null,
   cardData: null,
   discussionTurn: null,
-  wordReview: null,
   voteTick: null,
   voteReveal: null,
   guessResult: null,
@@ -132,8 +121,6 @@ export function gameReducer(state: GameState, action: Action): GameState {
       return { ...state, cardData: action.card, screen: 'card_reveal' }
     case 'DISCUSSION_TURN':
       return { ...state, discussionTurn: action.turn, screen: 'discussion' }
-    case 'WORD_REVIEW':
-      return { ...state, wordReview: action.entries, screen: 'word_review' }
     case 'VOTE_TICK':
       return { ...state, voteTick: { count: action.count, total: action.total } }
     case 'VOTE_REVEAL':
