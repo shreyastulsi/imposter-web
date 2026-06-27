@@ -30,7 +30,7 @@ export default function CardReveal({ state, onAcknowledge, onStartDiscussion }: 
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-between px-4 py-8 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col items-center justify-between px-4 py-8 bg-[#130800]">
       <div className="text-center">
         <h2 className="text-white font-bold text-xl">Check your card</h2>
         <p className="text-white/40 text-sm mt-1">Don't show your screen to anyone</p>
@@ -51,7 +51,7 @@ export default function CardReveal({ state, onAcknowledge, onStartDiscussion }: 
           >
             {/* Back face */}
             <div
-              className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center border-2 border-indigo-400/30"
+              className="absolute inset-0 rounded-3xl bg-gradient-to-br from-orange-600 to-amber-700 flex items-center justify-center border-2 border-amber-400/30"
               style={{ backfaceVisibility: 'hidden' }}
             >
               <div className="text-center">
@@ -143,7 +143,7 @@ export default function CardReveal({ state, onAcknowledge, onStartDiscussion }: 
         </div>
         <div className="w-full bg-white/10 rounded-full h-2">
           <div
-            className="bg-indigo-500 h-2 rounded-full transition-all"
+            className="bg-amber-500 h-2 rounded-full transition-all"
             style={{ width: `${totalCount > 0 ? (revealedCount / totalCount) * 100 : 0}%` }}
           />
         </div>
@@ -151,7 +151,7 @@ export default function CardReveal({ state, onAcknowledge, onStartDiscussion }: 
           <button
             onClick={onStartDiscussion}
             disabled={!allRevealed}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors mt-2"
+            className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors mt-2"
           >
             {allRevealed ? 'Start Discussion' : 'Waiting for everyone to reveal...'}
           </button>

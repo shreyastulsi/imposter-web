@@ -25,22 +25,22 @@ export default function Home({ onCreate, onJoin }: Props) {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#130800]">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-black text-white tracking-tight">Imposter</h1>
-          <p className="text-indigo-300 mt-2 text-sm">Who is the real imposter?</p>
+          <p className="text-amber-300 mt-2 text-sm">Who is the real imposter?</p>
         </div>
 
         <div className="flex rounded-xl overflow-hidden mb-6 border border-white/10">
           <button
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'create' ? 'bg-indigo-600 text-white' : 'bg-white/5 text-white/60'}`}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'create' ? 'bg-orange-600 text-white' : 'bg-white/5 text-white/60'}`}
             onClick={() => setTab('create')}
           >
             Create Room
           </button>
           <button
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'join' ? 'bg-indigo-600 text-white' : 'bg-white/5 text-white/60'}`}
+            className={`flex-1 py-3 text-sm font-semibold transition-colors ${tab === 'join' ? 'bg-orange-600 text-white' : 'bg-white/5 text-white/60'}`}
             onClick={() => setTab('join')}
           >
             Join Room
@@ -50,7 +50,7 @@ export default function Home({ onCreate, onJoin }: Props) {
         {tab === 'create' ? (
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <input
-              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Your nickname"
               value={nickname}
               onChange={e => setNickname(e.target.value)}
@@ -67,7 +67,7 @@ export default function Home({ onCreate, onJoin }: Props) {
                     value={level}
                     checked={infoLevel === level}
                     onChange={() => setInfoLevel(level)}
-                    className="accent-indigo-500"
+                    className="accent-orange-500"
                   />
                   <span className="text-white text-sm">
                     {level === 'none' && 'Nothing — just knows they are the imposter'}
@@ -79,7 +79,7 @@ export default function Home({ onCreate, onJoin }: Props) {
             </div>
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >
               Create Room
             </button>
@@ -87,7 +87,7 @@ export default function Home({ onCreate, onJoin }: Props) {
         ) : (
           <form onSubmit={handleJoin} className="flex flex-col gap-4">
             <input
-              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Your nickname"
               value={nickname}
               onChange={e => setNickname(e.target.value)}
@@ -95,7 +95,7 @@ export default function Home({ onCreate, onJoin }: Props) {
               required
             />
             <input
-              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-indigo-500 uppercase tracking-widest font-mono text-center"
+              className="w-full bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-orange-500 uppercase tracking-widest font-mono text-center"
               placeholder="ROOM CODE"
               value={code}
               onChange={e => setCode(e.target.value.toUpperCase())}
@@ -104,7 +104,7 @@ export default function Home({ onCreate, onJoin }: Props) {
             />
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >
               Join Room
             </button>

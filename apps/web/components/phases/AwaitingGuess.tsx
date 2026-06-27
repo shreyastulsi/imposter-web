@@ -13,7 +13,7 @@ export default function AwaitingGuess({ state, onJudge }: Props) {
   const imposterName = imposterId ? state.players[imposterId]?.nickname : 'The imposter'
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#130800]">
       <div className="w-full max-w-sm text-center">
         <div className="text-5xl mb-4">🕵️</div>
         <h2 className="text-white font-black text-2xl mb-2">Last Chance!</h2>

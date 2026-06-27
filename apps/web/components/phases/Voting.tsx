@@ -22,7 +22,7 @@ export default function Voting({ state, onVote }: Props) {
 
   if (voteReveal) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 bg-[#0f0f23]">
+      <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-8 bg-[#130800]">
         <div className="w-full max-w-sm">
           <h2 className="text-white font-bold text-xl text-center mb-6">Vote Results</h2>
           <ul className="flex flex-col gap-3 mb-6">
@@ -39,7 +39,7 @@ export default function Voting({ state, onVote }: Props) {
                   <div className="flex items-center gap-2">
                     {isImposter && <span>🕵️</span>}
                     <span className="text-white font-semibold">{p.nickname}</span>
-                    {p.id === myId && <span className="text-xs text-indigo-400">(you)</span>}
+                    {p.id === myId && <span className="text-xs text-amber-400">(you)</span>}
                   </div>
                   <span className="text-white/60 text-sm">{votesForThis} vote{votesForThis !== 1 ? 's' : ''}</span>
                 </li>
@@ -57,7 +57,7 @@ export default function Voting({ state, onVote }: Props) {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
       <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
         <div className="text-center mb-6">
           <h2 className="text-white font-bold text-xl">Who is the imposter?</h2>

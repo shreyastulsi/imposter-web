@@ -13,7 +13,7 @@ export default function Lobby({ state, onStart, onKick }: Props) {
   const canStart = players.filter(p => p.isConnected).length >= 3
 
   return (
-    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
       <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
         <div className="text-center mb-6">
           <p className="text-white/50 text-xs uppercase tracking-widest mb-1">Room Code</p>
@@ -31,7 +31,7 @@ export default function Lobby({ state, onStart, onKick }: Props) {
                 <div className="flex items-center gap-3">
                   <div className={`w-2 h-2 rounded-full ${p.isConnected ? 'bg-green-400' : 'bg-red-400'}`} />
                   <span className="text-white font-medium">{p.nickname}</span>
-                  {p.isHost && <span className="text-xs text-indigo-400 font-semibold">HOST</span>}
+                  {p.isHost && <span className="text-xs text-amber-400 font-semibold">HOST</span>}
                 </div>
                 {state.isHost && !p.isHost && (
                   <button
@@ -54,7 +54,7 @@ export default function Lobby({ state, onStart, onKick }: Props) {
             <button
               onClick={onStart}
               disabled={!canStart}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+              className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >
               Start Game
             </button>

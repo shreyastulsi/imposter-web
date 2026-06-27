@@ -27,7 +27,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
 
   if (gameOver && winner) {
     return (
-      <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
+      <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
         <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
 
           <div className="text-center mb-8">
@@ -49,7 +49,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
                     <span className="text-white/30 text-sm w-4">{i + 1}</span>
                     {i === 0 && <span>🏆</span>}
                     <span className={`font-medium ${p.id === winnerId ? 'text-yellow-400' : 'text-white'}`}>{p.nickname}</span>
-                    {p.id === myId && <span className="text-xs text-indigo-400">(you)</span>}
+                    {p.id === myId && <span className="text-xs text-amber-400">(you)</span>}
                   </div>
                   <span className={`font-black text-lg ${p.id === winnerId ? 'text-yellow-400' : 'text-white'}`}>{p.score}</span>
                 </li>
@@ -60,7 +60,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
           {isHost ? (
             <button
               onClick={onResetGame}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >
               Play Again
             </button>
@@ -74,7 +74,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
       <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
 
         <div className="text-center mb-5">
@@ -124,13 +124,13 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
                 <div className="flex items-center gap-3">
                   <span className="text-white/30 text-sm w-4">{i + 1}</span>
                   <span className="text-white font-medium">{p.nickname}</span>
-                  {p.id === myId && <span className="text-xs text-indigo-400">(you)</span>}
+                  {p.id === myId && <span className="text-xs text-amber-400">(you)</span>}
                   {p.id === roundResult.imposterId && <span className="text-xs text-red-400">🕵️</span>}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-24 bg-white/10 rounded-full h-1.5">
                     <div
-                      className="bg-indigo-500 h-1.5 rounded-full transition-all"
+                      className="bg-amber-500 h-1.5 rounded-full transition-all"
                       style={{ width: `${Math.min(100, (p.score / 10) * 100)}%` }}
                     />
                   </div>
@@ -144,7 +144,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
         {isHost ? (
           <button
             onClick={onNewRound}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
+            className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
           >
             Next Round
           </button>

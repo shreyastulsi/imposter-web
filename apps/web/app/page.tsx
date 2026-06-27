@@ -18,11 +18,11 @@ function Game() {
     <div className="min-h-dvh flex flex-col">
       {state.error && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 px-4">
-          <div className="bg-[#1a1a3e] rounded-2xl p-6 max-w-sm w-full text-center">
+          <div className="bg-[#1a0800] rounded-2xl p-6 max-w-sm w-full text-center">
             <p className="text-red-400 text-lg mb-4">{state.error}</p>
             <button
               onClick={game.clearError}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-xl font-semibold"
+              className="bg-orange-600 text-white px-6 py-2 rounded-xl font-semibold"
             >
               OK
             </button>

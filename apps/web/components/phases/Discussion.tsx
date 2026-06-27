@@ -31,7 +31,7 @@ export default function Discussion({ state, onSpoke }: Props) {
   const urgentColor = secondsLeft <= 5 ? 'text-red-400' : secondsLeft <= 10 ? 'text-yellow-400' : 'text-white/50'
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#0f0f23]">
+    <div className="min-h-dvh flex flex-col items-center justify-center px-4 bg-[#130800]">
       <div className="w-full max-w-sm text-center">
 
         <p className="text-white/30 text-xs uppercase tracking-widest mb-6">
@@ -45,7 +45,7 @@ export default function Discussion({ state, onSpoke }: Props) {
             <p className="text-white/50 text-sm mb-8">Say one word out loud, then tap done.</p>
             <button
               onClick={onSpoke}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95 mb-4"
+              className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95 mb-4"
             >
               Done
             </button>
@@ -54,7 +54,7 @@ export default function Discussion({ state, onSpoke }: Props) {
           <>
             <div className="text-5xl mb-4">👂</div>
             <h2 className="text-white font-black text-2xl mb-1">
-              <span className="text-indigo-400">{activeName}</span>
+              <span className="text-amber-400">{activeName}</span>
             </h2>
             <p className="text-white/40 text-sm mb-8">is saying their word...</p>
           </>
