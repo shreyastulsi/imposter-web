@@ -272,6 +272,98 @@ describe('hostJudgeGuess', () => {
   })
 })
 
+// ─── Behavior: scoring ───────────────────────────────────────────────────────
+
+describe('scoring', () => {
+  function setupFinished(manager: RoomManager, result: 'civilians_win' | 'imposter_wins') {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    manager.startGame(room.id, 's1')
+    manager.startVoting(room.id, 's1')
+    manager.finalizeResult(room.id, result)
+    return room.id
+  }
+
+  it('imposter wins — imposter gets 3 points', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    const started = manager.startGame(room.id, 's1')
+    const imposterId = started.round!.imposterId
+    manager.startVoting(room.id, 's1')
+    const updated = manager.finalizeResult(room.id, 'imposter_wins')
+    expect(updated.players[imposterId].score).toBe(3)
+  })
+
+  it('civilians win — each civilian gets 1 point, imposter gets 0', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    const started = manager.startGame(room.id, 's1')
+    const imposterId = started.round!.imposterId
+    const civilians = ['s1', 's2', 's3'].filter(id => id !== imposterId)
+    manager.startVoting(room.id, 's1')
+    const updated = manager.finalizeResult(room.id, 'civilians_win')
+    expect(updated.players[imposterId].score).toBe(0)
+    civilians.forEach(id => expect(updated.players[id].score).toBe(1))
+  })
+})
+
+// ─── Behavior: getGameOverStatus ─────────────────────────────────────────────
+
+describe('getGameOverStatus', () => {
+  it('returns gameOver false when no player has reached 10', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    manager.startGame(room.id, 's1')
+    manager.startVoting(room.id, 's1')
+    manager.finalizeResult(room.id, 'civilians_win')
+    const status = manager.getGameOverStatus(room.id)
+    expect(status.gameOver).toBe(false)
+  })
+
+  it('returns gameOver true with winnerId when a player reaches 10', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    const started = manager.startGame(room.id, 's1')
+    const imposterId = started.round!.imposterId
+    // manually set imposter score to 9 then finalize imposter_wins (+3 → 12)
+    const writable = (manager as any).rooms.get(room.id)
+    writable.players[imposterId].score = 9
+    manager.startVoting(room.id, 's1')
+    manager.finalizeResult(room.id, 'imposter_wins')
+    const status = manager.getGameOverStatus(room.id)
+    expect(status.gameOver).toBe(true)
+    expect(status.winnerId).toBe(imposterId)
+  })
+})
+
+// ─── Behavior: resetGame ─────────────────────────────────────────────────────
+
+describe('resetGame', () => {
+  it('resets all scores to 0 and returns to lobby', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    manager.joinRoom(room.id, 's3', 'C')
+    manager.startGame(room.id, 's1')
+    manager.startVoting(room.id, 's1')
+    manager.finalizeResult(room.id, 'imposter_wins')
+    const reset = manager.resetGame(room.id, 's1')
+    expect(reset.phase).toBe('lobby')
+    Object.values(reset.players).forEach(p => expect(p.score).toBe(0))
+    expect(reset.round).toBeNull()
+  })
+
+  it('throws if caller is not host', () => {
+    const room = manager.createRoom('s1', 'A', 'none')
+    manager.joinRoom(room.id, 's2', 'B')
+    expect(() => manager.resetGame(room.id, 's2')).toThrow('not_host')
+  })
+})
+
 // ─── Behavior 13: startNewRound ──────────────────────────────────────────────
 
 describe('startNewRound', () => {

@@ -69,6 +69,7 @@ function Game() {
         <Results
           state={state}
           onNewRound={() => game.startNewRound(state.roomId!)}
+          onResetGame={() => game.resetGame(state.roomId!)}
         />
       )}
     </div>

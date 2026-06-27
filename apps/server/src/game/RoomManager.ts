@@ -222,8 +222,25 @@ export class RoomManager {
     if (result === 'civilians_win') {
       players.filter(p => p.id !== round.imposterId).forEach(p => { p.score += 1 })
     } else {
-      room.players[round.imposterId].score += 1
+      room.players[round.imposterId].score += 3
     }
+    return this.clone(room)
+  }
+
+  getGameOverStatus(roomId: string): { gameOver: boolean; winnerId?: string } {
+    const room = this.getWritableRoom(roomId)
+    for (const player of Object.values(room.players)) {
+      if (player.score >= 10) return { gameOver: true, winnerId: player.id }
+    }
+    return { gameOver: false }
+  }
+
+  resetGame(roomId: string, callerId: string): Room {
+    const room = this.getWritableRoom(roomId)
+    if (room.hostId !== callerId) throw new Error('not_host')
+    Object.values(room.players).forEach(p => { p.score = 0 })
+    room.round = null
+    room.phase = 'lobby'
     return this.clone(room)
   }
 

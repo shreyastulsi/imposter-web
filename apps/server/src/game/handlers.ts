@@ -131,12 +131,14 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
         io.to(roomId).emit('vote:reveal', result)
         if (!result.majorityCaught) {
           const room = mgr.finalizeResult(roomId, 'imposter_wins')
+          const gameOver = mgr.getGameOverStatus(roomId)
           io.to(roomId).emit('phase:results', {
             result: 'imposter_wins',
             scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
             imposterId: result.imposterId,
             word: room.round?.word.word,
             englishWord: room.round?.word.english,
+            ...gameOver,
           })
         } else {
           const room = mgr.getRoom(roomId)
@@ -152,13 +154,24 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
     try {
       const judgeResult = mgr.hostJudgeGuess(roomId, socket.id, correct)
       const room = mgr.finalizeResult(roomId, judgeResult.result)
+      const gameOver = mgr.getGameOverStatus(roomId)
       io.to(roomId).emit('phase:results', {
         result: judgeResult.result,
         scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
         imposterId: room.round?.imposterId,
         word: room.round?.word.word,
         englishWord: room.round?.word.english,
+        ...gameOver,
       })
+    } catch (e: any) {
+      socket.emit('error', { code: e.message })
+    }
+  })
+
+  socket.on('game:reset', ({ roomId }) => {
+    try {
+      const room = mgr.resetGame(roomId, socket.id)
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }

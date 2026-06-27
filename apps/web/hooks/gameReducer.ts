@@ -21,6 +21,8 @@ export interface RoundResult {
   imposterId: string
   word: string
   englishWord?: string
+  gameOver?: boolean
+  winnerId?: string
 }
 
 export interface DiscussionTurn {

@@ -146,6 +146,10 @@ export function useGameSocket() {
     getSocket().emit('player:kick', { roomId, playerId })
   }, [])
 
+  const resetGame = useCallback((roomId: string) => {
+    getSocket().emit('game:reset', { roomId })
+  }, [])
+
   const clearError = useCallback(() => dispatch({ type: 'CLEAR_ERROR' }), [])
 
   return {
@@ -161,6 +165,7 @@ export function useGameSocket() {
     judgeGuess,
     startNewRound,
     kickPlayer,
+    resetGame,
     clearError,
   }
 }
