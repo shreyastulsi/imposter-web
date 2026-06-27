@@ -129,8 +129,13 @@ export function gameReducer(state: GameState, action: Action): GameState {
       return { ...state, voteReveal: action.data }
     case 'GUESS_RESULT':
       return { ...state, guessResult: { correct: action.correct, word: action.word } }
-    case 'ROUND_RESULT':
-      return { ...state, roundResult: action.data, screen: 'results' }
+    case 'ROUND_RESULT': {
+      const updatedPlayers = { ...state.players }
+      for (const [id, score] of Object.entries(action.data.scores)) {
+        if (updatedPlayers[id]) updatedPlayers[id] = { ...updatedPlayers[id], score }
+      }
+      return { ...state, roundResult: action.data, screen: 'results', players: updatedPlayers }
+    }
     case 'ERROR':
       return { ...state, error: action.message }
     case 'CLEAR_ERROR':
