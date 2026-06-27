@@ -64,3 +64,70 @@ describe('ROOM_STATE card_reveal', () => {
     expect(next.cardData).toEqual(mockCard)
   })
 })
+
+// ─── ROUND_RESULT: score updates ─────────────────────────────────────────────
+
+describe('ROUND_RESULT scoring', () => {
+  it('updates player scores from the event payload — imposter wins 3 points', () => {
+    const state: GameState = {
+      ...initialState,
+      screen: 'voting',
+      players: mockPlayers,
+    }
+    const next = gameReducer(state, {
+      type: 'ROUND_RESULT',
+      data: {
+        result: 'imposter_wins',
+        scores: { 's1': 0, 's2': 3 },
+        imposterId: 's2',
+        word: 'शेर',
+        gameOver: false,
+      },
+    })
+    expect(next.screen).toBe('results')
+    expect(next.players['s2'].score).toBe(3)
+    expect(next.players['s1'].score).toBe(0)
+  })
+
+  it('updates player scores — civilians each win 1 point', () => {
+    const state: GameState = {
+      ...initialState,
+      screen: 'voting',
+      players: mockPlayers,
+    }
+    const next = gameReducer(state, {
+      type: 'ROUND_RESULT',
+      data: {
+        result: 'civilians_win',
+        scores: { 's1': 1, 's2': 0 },
+        imposterId: 's2',
+        word: 'शेर',
+        gameOver: false,
+      },
+    })
+    expect(next.players['s1'].score).toBe(1)
+    expect(next.players['s2'].score).toBe(0)
+  })
+
+  it('carries gameOver and winnerId through to roundResult', () => {
+    const state: GameState = {
+      ...initialState,
+      screen: 'voting',
+      players: { ...mockPlayers, 's2': { ...mockPlayers['s2'], score: 9 } },
+    }
+    const next = gameReducer(state, {
+      type: 'ROUND_RESULT',
+      data: {
+        result: 'imposter_wins',
+        scores: { 's1': 0, 's2': 12 },
+        imposterId: 's2',
+        word: 'शेर',
+        gameOver: true,
+        winnerId: 's2',
+      },
+    })
+    expect(next.roundResult?.gameOver).toBe(true)
+    expect(next.roundResult?.winnerId).toBe('s2')
+    expect(next.players['s2'].score).toBe(12)
+  })
+})
