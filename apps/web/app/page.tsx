@@ -1,5 +1,7 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { useGameSocket } from '@/hooks/useGameSocket'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import Home from '@/components/phases/Home'
@@ -9,10 +11,13 @@ import Discussion from '@/components/phases/Discussion'
 import Voting from '@/components/phases/Voting'
 import AwaitingGuess from '@/components/phases/AwaitingGuess'
 import Results from '@/components/phases/Results'
+import type { InfoLevel } from '@imposter/shared'
 
 function Game() {
   const game = useGameSocket()
   const { state } = game
+  const searchParams = useSearchParams()
+  const initialRoomCode = searchParams.get('room') ?? undefined
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -31,12 +36,18 @@ function Game() {
       )}
 
       {state.screen === 'home' && (
-        <Home onCreate={game.createRoom} onJoin={game.joinRoom} />
+        <Home
+          initialRoomCode={initialRoomCode}
+          onCreate={(nickname: string, infoLevel: InfoLevel, targetScore: number, difficulty: string) =>
+            game.createRoom(nickname, infoLevel, targetScore, difficulty)
+          }
+          onJoin={game.joinRoom}
+        />
       )}
       {state.screen === 'lobby' && (
         <Lobby
           state={state}
-          onStart={() => game.startGame(state.roomId!)}
+          onStart={(category: string) => game.startGame(state.roomId!, category)}
           onKick={(id) => game.kickPlayer(state.roomId!, id)}
         />
       )}
@@ -68,7 +79,7 @@ function Game() {
       {state.screen === 'results' && (
         <Results
           state={state}
-          onNewRound={() => game.startNewRound(state.roomId!)}
+          onNewRound={(category: string) => game.startNewRound(state.roomId!, category)}
           onResetGame={() => game.resetGame(state.roomId!)}
         />
       )}
@@ -79,7 +90,9 @@ function Game() {
 export default function Page() {
   return (
     <LanguageProvider>
-      <Game />
+      <Suspense>
+        <Game />
+      </Suspense>
     </LanguageProvider>
   )
 }

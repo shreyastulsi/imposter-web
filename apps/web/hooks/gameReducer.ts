@@ -15,6 +15,12 @@ export interface VoteReveal {
   majorityCaught: boolean
 }
 
+export interface GameStats {
+  bestImposterId: string | null
+  mostSuspiciousId: string | null
+  sharpEyeId: string | null
+}
+
 export interface RoundResult {
   result: 'civilians_win' | 'imposter_wins'
   scores: Record<string, number>
@@ -23,6 +29,7 @@ export interface RoundResult {
   englishWord?: string
   gameOver?: boolean
   winnerId?: string
+  stats?: GameStats
 }
 
 export interface DiscussionTurn {
@@ -39,6 +46,7 @@ export interface GameState {
   isHost: boolean
   players: Record<string, Player>
   hostId: string | null
+  targetScore: number
   cardData: CardData | null
   discussionTurn: DiscussionTurn | null
   voteTick: { count: number; total: number } | null
@@ -49,8 +57,8 @@ export interface GameState {
 }
 
 export type Action =
-  | { type: 'JOINED'; roomId: string; myId: string; nickname: string; players: Record<string, Player>; hostId: string; phase: GamePhase }
-  | { type: 'ROOM_STATE'; players: Record<string, Player>; hostId: string; phase: GamePhase }
+  | { type: 'JOINED'; roomId: string; myId: string; nickname: string; players: Record<string, Player>; hostId: string; phase: GamePhase; targetScore: number }
+  | { type: 'ROOM_STATE'; players: Record<string, Player>; hostId: string; phase: GamePhase; targetScore?: number }
   | { type: 'CARD_DATA'; card: CardData }
   | { type: 'DISCUSSION_TURN'; turn: DiscussionTurn }
   | { type: 'VOTE_TICK'; count: number; total: number }
@@ -80,6 +88,7 @@ export const initialState: GameState = {
   isHost: false,
   players: {},
   hostId: null,
+  targetScore: 10,
   cardData: null,
   discussionTurn: null,
   voteTick: null,
@@ -101,6 +110,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
         isHost: action.players[action.myId]?.isHost ?? false,
         players: action.players,
         hostId: action.hostId,
+        targetScore: action.targetScore ?? 10,
         error: null,
       }
     case 'ROOM_STATE': {
@@ -112,6 +122,7 @@ export function gameReducer(state: GameState, action: Action): GameState {
         players: action.players,
         hostId: action.hostId,
         isHost: state.myId ? action.players[state.myId]?.isHost ?? false : false,
+        targetScore: action.targetScore ?? state.targetScore,
         cardData: enteringLobby || enteringCardReveal ? null : state.cardData,
         discussionTurn: enteringLobby || enteringCardReveal ? null : state.discussionTurn,
         voteTick: enteringLobby || enteringCardReveal ? null : state.voteTick,

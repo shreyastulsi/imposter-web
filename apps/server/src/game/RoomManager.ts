@@ -2,9 +2,12 @@ import type {
   Room,
   Player,
   InfoLevel,
+  Difficulty,
   WordEntry,
   CardData,
   GuessResult,
+  GameStats,
+  RoundSummary,
 } from '@imposter/shared'
 
 interface VoteTick {
@@ -33,7 +36,7 @@ export class RoomManager {
 
   constructor(private wordList: WordEntry[]) {}
 
-  createRoom(playerId: string, nickname: string, infoLevel: InfoLevel): Room {
+  createRoom(playerId: string, nickname: string, infoLevel: InfoLevel, targetScore = 10, difficulty: Difficulty = 'medium'): Room {
     const id = generateRoomId(new Set(this.rooms.keys()))
     const player: Player = {
       id: playerId,
@@ -52,6 +55,9 @@ export class RoomManager {
       players: { [playerId]: player },
       round: null,
       hostId: playerId,
+      targetScore,
+      difficulty,
+      roundHistory: [],
     }
     this.rooms.set(id, room)
     return this.clone(room)
@@ -74,22 +80,16 @@ export class RoomManager {
     return this.clone(room)
   }
 
-  startGame(roomId: string, callerId: string): Room {
+  startGame(roomId: string, callerId: string, category?: string): Room {
     const room = this.getWritableRoom(roomId)
     if (room.hostId !== callerId) throw new Error('not_host')
     const connected = this.connectedPlayers(room)
     if (connected.length < 3) throw new Error('not_enough_players')
 
-    const word = this.pickWord(room)
+    const word = this.pickWord(room, category)
     const imposterId = connected[Math.floor(Math.random() * connected.length)].id
 
-    room.round = {
-      word,
-      imposterId,
-      votes: {},
-      result: null,
-      guessCorrect: null,
-    }
+    room.round = { word, imposterId, votes: {}, result: null, guessCorrect: null }
     room.phase = 'card_reveal'
     Object.values(room.players).forEach(p => { p.hasRevealed = false; p.vote = null })
     return this.clone(room)
@@ -116,7 +116,6 @@ export class RoomManager {
     let index = round.currentTurnIndex! + 1
     let discussionRound = round.discussionRound!
 
-    // If we've exhausted this round, move to next round or finish
     if (index >= order.length) {
       if (discussionRound === 2) {
         room.phase = 'voting'
@@ -126,7 +125,6 @@ export class RoomManager {
       index = 0
     }
 
-    // Skip disconnected players
     while (index < order.length && !room.players[order[index]]?.isConnected) {
       index++
       if (index >= order.length) {
@@ -224,15 +222,69 @@ export class RoomManager {
     } else {
       room.players[round.imposterId].score += 3
     }
+
+    room.roundHistory.push({
+      imposterId: round.imposterId,
+      result,
+      votes: { ...round.votes },
+    })
+
     return this.clone(room)
   }
 
   getGameOverStatus(roomId: string): { gameOver: boolean; winnerId?: string } {
     const room = this.getWritableRoom(roomId)
     for (const player of Object.values(room.players)) {
-      if (player.score >= 10) return { gameOver: true, winnerId: player.id }
+      if (player.score >= room.targetScore) return { gameOver: true, winnerId: player.id }
     }
     return { gameOver: false }
+  }
+
+  getGameStats(roomId: string): GameStats {
+    const room = this.getWritableRoom(roomId)
+    const history = room.roundHistory
+    const playerIds = Object.keys(room.players)
+
+    const timesAsImposter: Record<string, number> = {}
+    const timesCaught: Record<string, number> = {}
+    const timesVotedFor: Record<string, number> = {}
+    const correctVotes: Record<string, number> = {}
+
+    for (const round of history) {
+      timesAsImposter[round.imposterId] = (timesAsImposter[round.imposterId] ?? 0) + 1
+      if (round.result === 'civilians_win') {
+        timesCaught[round.imposterId] = (timesCaught[round.imposterId] ?? 0) + 1
+      }
+      for (const [voterId, targetId] of Object.entries(round.votes)) {
+        timesVotedFor[targetId] = (timesVotedFor[targetId] ?? 0) + 1
+        if (targetId === round.imposterId) {
+          correctVotes[voterId] = (correctVotes[voterId] ?? 0) + 1
+        }
+      }
+    }
+
+    let bestImposterId: string | null = null
+    let bestEscapes = 0
+    for (const id of playerIds) {
+      const escaped = (timesAsImposter[id] ?? 0) - (timesCaught[id] ?? 0)
+      if (escaped > bestEscapes) { bestEscapes = escaped; bestImposterId = id }
+    }
+
+    let mostSuspiciousId: string | null = null
+    let maxVotes = 0
+    for (const id of playerIds) {
+      const votes = timesVotedFor[id] ?? 0
+      if (votes > maxVotes) { maxVotes = votes; mostSuspiciousId = id }
+    }
+
+    let sharpEyeId: string | null = null
+    let maxCorrect = 0
+    for (const id of playerIds) {
+      const correct = correctVotes[id] ?? 0
+      if (correct > maxCorrect) { maxCorrect = correct; sharpEyeId = id }
+    }
+
+    return { bestImposterId, mostSuspiciousId, sharpEyeId }
   }
 
   resetGame(roomId: string, callerId: string): Room {
@@ -241,15 +293,16 @@ export class RoomManager {
     Object.values(room.players).forEach(p => { p.score = 0 })
     room.round = null
     room.phase = 'lobby'
+    room.roundHistory = []
     return this.clone(room)
   }
 
-  startNewRound(roomId: string, callerId: string): Room {
+  startNewRound(roomId: string, callerId: string, category?: string): Room {
     const room = this.getWritableRoom(roomId)
     if (room.hostId !== callerId) throw new Error('not_host')
     if (!room.round) throw new Error('no_active_round')
 
-    const word = this.pickWord(room)
+    const word = this.pickWord(room, category)
     const connected = this.connectedPlayers(room)
     const imposterId = connected[Math.floor(Math.random() * connected.length)].id
 
@@ -315,8 +368,12 @@ export class RoomManager {
     return Object.values(room.players).filter(p => p.isConnected)
   }
 
-  private pickWord(room: Room): WordEntry {
-    return this.wordList[Math.floor(Math.random() * this.wordList.length)]
+  private pickWord(room: Room, category?: string): WordEntry {
+    let pool = category
+      ? this.wordList.filter(w => w.category === category)
+      : this.wordList.filter(w => w.difficulty === room.difficulty)
+    if (pool.length === 0) pool = this.wordList
+    return pool[Math.floor(Math.random() * pool.length)]
   }
 
   private clone(room: Room): Room {

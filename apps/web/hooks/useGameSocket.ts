@@ -48,11 +48,12 @@ export function useGameSocket() {
         players: room.players,
         hostId: room.hostId,
         phase: room.phase,
+        targetScore: room.targetScore ?? 10,
       })
     })
 
-    socket.on('room:state', ({ phase, players, hostId }) => {
-      dispatch({ type: 'ROOM_STATE', phase, players, hostId })
+    socket.on('room:state', ({ phase, players, hostId, targetScore }) => {
+      dispatch({ type: 'ROOM_STATE', phase, players, hostId, targetScore })
     })
 
     socket.on('card:data', (card: CardData) => {
@@ -100,9 +101,9 @@ export function useGameSocket() {
     }
   }, [])
 
-  const createRoom = useCallback((nickname: string, infoLevel: InfoLevel) => {
+  const createRoom = useCallback((nickname: string, infoLevel: InfoLevel, targetScore: number, difficulty: string) => {
     nicknameRef.current = nickname
-    getSocket().emit('room:create', { nickname, infoLevel })
+    getSocket().emit('room:create', { nickname, infoLevel, targetScore, difficulty })
   }, [])
 
   const joinRoom = useCallback((roomId: string, nickname: string) => {
@@ -110,8 +111,8 @@ export function useGameSocket() {
     getSocket().emit('room:join', { roomId: roomId.toUpperCase(), nickname })
   }, [])
 
-  const startGame = useCallback((roomId: string) => {
-    getSocket().emit('game:start', { roomId })
+  const startGame = useCallback((roomId: string, category?: string) => {
+    getSocket().emit('game:start', { roomId, category })
   }, [])
 
   const acknowledgeCard = useCallback((roomId: string) => {
@@ -138,8 +139,8 @@ export function useGameSocket() {
     getSocket().emit('guess:judge', { roomId, correct })
   }, [])
 
-  const startNewRound = useCallback((roomId: string) => {
-    getSocket().emit('round:new', { roomId })
+  const startNewRound = useCallback((roomId: string, category?: string) => {
+    getSocket().emit('round:new', { roomId, category })
   }, [])
 
   const kickPlayer = useCallback((roomId: string, playerId: string) => {

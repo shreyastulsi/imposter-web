@@ -1,16 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import type { GameState } from '@/hooks/useGameSocket'
 import { useLang } from '@/contexts/LanguageContext'
+import CategoryPicker from '@/components/CategoryPicker'
 
 interface Props {
   state: GameState
-  onNewRound: () => void
+  onNewRound: (category: string) => void
   onResetGame: () => void
 }
 
 export default function Results({ state, onNewRound, onResetGame }: Props) {
-  const { roundResult, players, myId, isHost } = state
+  const [pickingCategory, setPickingCategory] = useState(false)
+  const { roundResult, players, myId, isHost, targetScore } = state
   const { lang } = useLang()
 
   if (!roundResult) return null
@@ -18,11 +21,10 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
   const civiliansWon = roundResult.result === 'civilians_win'
   const imposter = players[roundResult.imposterId]
   const iWasImposter = roundResult.imposterId === myId
-  const { gameOver, winnerId } = roundResult
+  const { gameOver, winnerId, stats } = roundResult
   const winner = winnerId ? players[winnerId] : null
 
   const sortedPlayers = Object.values(players).sort((a, b) => b.score - a.score)
-
   const displayWord = lang === 'en' ? (roundResult.englishWord ?? roundResult.word) : roundResult.word
 
   if (gameOver && winner) {
@@ -30,13 +32,50 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
       <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
         <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
 
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <div className="text-6xl mb-3">🏆</div>
             <h2 className="text-yellow-400 font-black text-3xl mb-1">Game Over!</h2>
             <p className="text-white/60 text-sm">
               <span className="text-white font-bold">{winner.nickname}</span> wins with {winner.score} points!
             </p>
           </div>
+
+          {stats && (
+            <div className="bg-white/5 rounded-2xl border border-white/10 mb-4 overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/10">
+                <p className="text-white/60 text-sm font-semibold">Game Awards</p>
+              </div>
+              <ul className="divide-y divide-white/5">
+                {stats.bestImposterId && players[stats.bestImposterId] && (
+                  <li className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-2xl">🕵️</span>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{players[stats.bestImposterId].nickname}</p>
+                      <p className="text-white/40 text-xs">Best Imposter — escaped the most</p>
+                    </div>
+                  </li>
+                )}
+                {stats.mostSuspiciousId && players[stats.mostSuspiciousId] && (
+                  <li className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-2xl">👀</span>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{players[stats.mostSuspiciousId].nickname}</p>
+                      <p className="text-white/40 text-xs">Most Suspicious — voted for the most</p>
+                    </div>
+                  </li>
+                )}
+                {stats.sharpEyeId && players[stats.sharpEyeId] && (
+                  <li className="flex items-center gap-3 px-4 py-3">
+                    <span className="text-2xl">🎯</span>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{players[stats.sharpEyeId].nickname}</p>
+                      <p className="text-white/40 text-xs">Sharp Eye — caught the imposter most</p>
+                    </div>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
 
           <div className="bg-white/5 rounded-2xl border border-white/10 mb-6 overflow-hidden">
             <div className="px-4 py-3 border-b border-white/10">
@@ -68,6 +107,26 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
             <p className="text-center text-white/40 text-sm">Waiting for host to start a new game...</p>
           )}
 
+        </div>
+      </div>
+    )
+  }
+
+  if (pickingCategory && isHost) {
+    return (
+      <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
+        <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
+          <div className="text-center mb-6">
+            <h2 className="text-white font-bold text-xl">Pick a Category</h2>
+            <p className="text-white/40 text-xs mt-1">Choose the word category for next round</p>
+          </div>
+          <CategoryPicker onPick={(cat) => { setPickingCategory(false); onNewRound(cat) }} />
+          <button
+            onClick={() => setPickingCategory(false)}
+            className="mt-4 text-white/30 text-sm text-center hover:text-white/60 transition-colors"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     )
@@ -116,7 +175,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
         <div className="bg-white/5 rounded-2xl border border-white/10 mb-5 overflow-hidden">
           <div className="px-4 py-3 border-b border-white/10 flex justify-between items-center">
             <p className="text-white/60 text-sm font-semibold">Scoreboard</p>
-            <p className="text-white/30 text-xs">First to 10 wins</p>
+            <p className="text-white/30 text-xs">First to {targetScore} wins</p>
           </div>
           <ul className="divide-y divide-white/5">
             {sortedPlayers.map((p, i) => (
@@ -131,7 +190,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
                   <div className="w-24 bg-white/10 rounded-full h-1.5">
                     <div
                       className="bg-amber-500 h-1.5 rounded-full transition-all"
-                      style={{ width: `${Math.min(100, (p.score / 10) * 100)}%` }}
+                      style={{ width: `${Math.min(100, (p.score / targetScore) * 100)}%` }}
                     />
                   </div>
                   <span className="text-white font-bold w-6 text-right">{p.score}</span>
@@ -143,7 +202,7 @@ export default function Results({ state, onNewRound, onResetGame }: Props) {
 
         {isHost ? (
           <button
-            onClick={onNewRound}
+            onClick={() => setPickingCategory(true)}
             className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
           >
             Next Round

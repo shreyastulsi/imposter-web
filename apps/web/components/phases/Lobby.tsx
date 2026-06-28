@@ -1,16 +1,40 @@
 'use client'
 
+import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import type { GameState } from '@/hooks/useGameSocket'
+import CategoryPicker from '@/components/CategoryPicker'
 
 interface Props {
   state: GameState
-  onStart: () => void
+  onStart: (category: string) => void
   onKick: (id: string) => void
 }
 
 export default function Lobby({ state, onStart, onKick }: Props) {
+  const [pickingCategory, setPickingCategory] = useState(false)
   const players = Object.values(state.players)
   const canStart = players.filter(p => p.isConnected).length >= 3
+
+  if (pickingCategory) {
+    return (
+      <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
+        <div className="max-w-sm mx-auto w-full flex flex-col flex-1">
+          <div className="text-center mb-6">
+            <h2 className="text-white font-bold text-xl">Pick a Category</h2>
+            <p className="text-white/40 text-xs mt-1">Choose the word category for this round</p>
+          </div>
+          <CategoryPicker onPick={(cat) => { setPickingCategory(false); onStart(cat) }} />
+          <button
+            onClick={() => setPickingCategory(false)}
+            className="mt-4 text-white/30 text-sm text-center hover:text-white/60 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-dvh flex flex-col px-4 py-8 bg-[#130800]">
@@ -20,6 +44,17 @@ export default function Lobby({ state, onStart, onKick }: Props) {
           <p className="text-4xl font-black text-white tracking-widest font-mono">{state.roomId}</p>
           <p className="text-white/40 text-xs mt-2">Share this code with your friends</p>
         </div>
+
+        {state.roomId && (
+          <div className="flex justify-center mb-5">
+            <div className="bg-white p-3 rounded-2xl">
+              <QRCodeSVG
+                value={`${typeof window !== 'undefined' ? window.location.origin : 'https://imposter.app'}/?room=${state.roomId}`}
+                size={140}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="bg-white/5 rounded-2xl border border-white/10 flex-1 mb-6 overflow-hidden">
           <div className="px-4 py-3 border-b border-white/10">
@@ -52,7 +87,7 @@ export default function Lobby({ state, onStart, onKick }: Props) {
               <p className="text-white/40 text-sm text-center">Need at least 3 players to start</p>
             )}
             <button
-              onClick={onStart}
+              onClick={() => setPickingCategory(true)}
               disabled={!canStart}
               className="w-full bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg transition-colors active:scale-95"
             >

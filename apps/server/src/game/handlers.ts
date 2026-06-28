@@ -34,9 +34,9 @@ function advanceTurnAndBroadcast(io: Server, mgr: RoomManager, roomId: string) {
 }
 
 export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
-  socket.on('room:create', ({ nickname, infoLevel }) => {
+  socket.on('room:create', ({ nickname, infoLevel, targetScore, difficulty }) => {
     try {
-      const room = mgr.createRoom(socket.id, nickname, infoLevel)
+      const room = mgr.createRoom(socket.id, nickname, infoLevel, targetScore, difficulty)
       socket.join(room.id)
       socket.emit('room:joined', { roomId: room.id, player: room.players[socket.id], room })
     } catch (e: any) {
@@ -66,10 +66,10 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
     }
   })
 
-  socket.on('game:start', ({ roomId }) => {
+  socket.on('game:start', ({ roomId, category }) => {
     try {
-      const room = mgr.startGame(roomId, socket.id)
-      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+      const room = mgr.startGame(roomId, socket.id, category)
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId, targetScore: room.targetScore })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }
@@ -132,6 +132,7 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
         if (!result.majorityCaught) {
           const room = mgr.finalizeResult(roomId, 'imposter_wins')
           const gameOver = mgr.getGameOverStatus(roomId)
+          const stats = gameOver.gameOver ? mgr.getGameStats(roomId) : undefined
           io.to(roomId).emit('phase:results', {
             result: 'imposter_wins',
             scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
@@ -139,6 +140,7 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
             word: room.round?.word.word,
             englishWord: room.round?.word.english,
             ...gameOver,
+            ...(stats ? { stats } : {}),
           })
         } else {
           const room = mgr.getRoom(roomId)
@@ -155,6 +157,7 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
       const judgeResult = mgr.hostJudgeGuess(roomId, socket.id, correct)
       const room = mgr.finalizeResult(roomId, judgeResult.result)
       const gameOver = mgr.getGameOverStatus(roomId)
+      const stats = gameOver.gameOver ? mgr.getGameStats(roomId) : undefined
       io.to(roomId).emit('phase:results', {
         result: judgeResult.result,
         scores: Object.fromEntries(Object.entries(room.players).map(([id, p]) => [id, p.score])),
@@ -162,6 +165,7 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
         word: room.round?.word.word,
         englishWord: room.round?.word.english,
         ...gameOver,
+        ...(stats ? { stats } : {}),
       })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
@@ -171,16 +175,16 @@ export function registerHandlers(io: Server, socket: Socket, mgr: RoomManager) {
   socket.on('game:reset', ({ roomId }) => {
     try {
       const room = mgr.resetGame(roomId, socket.id)
-      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId, targetScore: room.targetScore })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }
   })
 
-  socket.on('round:new', ({ roomId }) => {
+  socket.on('round:new', ({ roomId, category }) => {
     try {
-      const room = mgr.startNewRound(roomId, socket.id)
-      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId })
+      const room = mgr.startNewRound(roomId, socket.id, category)
+      io.to(roomId).emit('room:state', { phase: room.phase, players: room.players, hostId: room.hostId, targetScore: room.targetScore })
     } catch (e: any) {
       socket.emit('error', { code: e.message })
     }

@@ -1,4 +1,5 @@
 export type InfoLevel = 'none' | 'category' | 'hint'
+export type Difficulty = 'easy' | 'medium' | 'hard'
 
 export type GamePhase =
   | 'lobby'
@@ -16,6 +17,7 @@ export interface WordEntry {
   englishCategory: string
   hint: string
   englishHint: string
+  difficulty: Difficulty
 }
 
 export interface Player {
@@ -40,6 +42,18 @@ export interface Round {
   discussionRound?: 1 | 2
 }
 
+export interface RoundSummary {
+  imposterId: string
+  result: 'civilians_win' | 'imposter_wins'
+  votes: Record<string, string>
+}
+
+export interface GameStats {
+  bestImposterId: string | null
+  mostSuspiciousId: string | null
+  sharpEyeId: string | null
+}
+
 export interface DiscussionTurnEvent {
   playerId: string
   turnNumber: 1 | 2
@@ -53,6 +67,9 @@ export interface Room {
   players: Record<string, Player>
   round: Round | null
   hostId: string
+  targetScore: number
+  difficulty: Difficulty
+  roundHistory: RoundSummary[]
 }
 
 export interface CardData {
